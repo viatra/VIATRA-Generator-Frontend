@@ -14,7 +14,7 @@
     "url": "git+https://github.com/viatra/VIATRA-Generator-Frontend.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Eclipse Public License",
   "bugs": {
     "url": "https://github.com/viatra/VIATRA-Generator-Frontend/issues"
   },
