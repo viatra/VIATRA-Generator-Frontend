@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
 
 router.get('/process_withconfig/:configName', function(req, res, next) {
   // currently just returns the config name passed in the url param
-  res.send('You gave the following config name: ' + req.params.configName);
+  res.send('You gave the following config name: ' + req.params.configName); 
 });
 
 module.exports = router;

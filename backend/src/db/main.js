@@ -19,6 +19,7 @@ const connect = (port, dbName, callback) => {
 
         callback(client, db);
     });
+
 };
 
 /**
