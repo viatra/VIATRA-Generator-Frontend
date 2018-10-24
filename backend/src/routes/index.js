@@ -4,7 +4,26 @@ const router = express.Router();
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Viatra Generator Service - backend' });
+  console.log('Homepage');
 });
+
+
+// Doesn't do anything yet - no POST on homepage yet?
+router.post('/testpage' , function (req, res, next) {
+  console.log("Post Requested")
+  var user_name=req.body.user;
+  var password=req.body.password;
+  console.log("User name = "+user_name+", password is "+password);
+  res.end("yes");
+  
+});
+router.get('/testpage', function(req, res, next) {
+  res.sendfile("src/views/testpage.html");  
+  console.log('TestPageGet');
+});
+
+
+//
 
 router.get('/process_withconfig/:configName', function(req, res, next) {
   // currently just returns the config name passed in the url param
