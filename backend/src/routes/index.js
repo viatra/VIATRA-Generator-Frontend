@@ -24,11 +24,14 @@ router.get('/testpage', function(req, res, next) {
 
 //
 router.post('/generateModel/:logicalName', function(req,res,next){
-  var input = req.body.title; // makeshift -- should be req.input?
+  const inputURL = req.url.logicalName; // makeshift -- should be req.params.logicalName?
+  //var input = 'C:\Users\musta\Downloads\test\inputs'; // local directory -- should be changed to URL/URI for general use?
+  const callback = (inputURL) => res.send(
+    'The following directory has been given : ' + req.url.logicalName + ' Model generated under backend/outputs'
 
+  );
+  generateModel(inputURl,callback);
 });
-
-
 
 
 router.get('/process_withconfig/:configName', function(req, res, next) {
