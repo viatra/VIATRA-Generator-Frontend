@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
 });
 
 
-// Get's username and password from /testpage -- currently just used for testing
+// Gets username and password from /testpage -- currently just used for testing
 router.post('/testpage' , function (req, res, next) {
   console.log("Post Requested")
   var user_name=req.body.user;
@@ -22,8 +22,14 @@ router.get('/testpage', function(req, res, next) {
   console.log('TestPageGet');
 });
 
-
 //
+router.post('/generateModel/:logicalName', function(req,res,next){
+  var input = req.body.title; // makeshift -- should be req.input?
+
+});
+
+
+
 
 router.get('/process_withconfig/:configName', function(req, res, next) {
   // currently just returns the config name passed in the url param
