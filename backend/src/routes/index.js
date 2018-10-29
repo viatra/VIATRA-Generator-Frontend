@@ -8,7 +8,7 @@ router.get('/', function(req, res, next) {
 });
 
 
-// Doesn't do anything yet - no POST on homepage yet?
+// Get's username and password from /testpage -- currently just used for testing
 router.post('/testpage' , function (req, res, next) {
   console.log("Post Requested")
   var user_name=req.body.user;
