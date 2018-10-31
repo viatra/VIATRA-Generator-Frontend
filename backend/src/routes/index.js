@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const controller = require("../controllers/index.js");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -22,19 +23,26 @@ router.get('/testpage', function(req, res, next) {
   console.log('TestPageGet');
 });
 
-//
-router.post('/generateModel/:logicalName', function(req,res,next){
-  //const inputURL = req.params.logicalName; // makeshift -- should be req.params.logicalName?
-  var input = 'C:\Users\musta\Downloads\test\inputs'; // local directory -- should be changed to URL/URI for general use?
-  const callback = (input) => res.send({
-    pathToOutput : 'backend/outputs'
+//Doesn't work with post ? Try GET for now
+router.get('/generateModel/:logicalName*', function(req,res,next){
+  const inputURL = req.params.logicalName; // makeshift -- should be req.params.logicalName?
+  const input2 = req.params;
+  const inputURL2 = input2[Object.keys(input2)[0]];
+  //var input = '/Users/musta/Downloads/test'; // local directory -- should be changed to URL/URI for general use? --WORKS
+  //var inputURL = req.body.user; //another temporary -- user inputs file directory into the username position -- WORKS but no json response?
+  const callback = (responseGenerated) => res.send({
+    response : responseGenerated
   });
-  res.send({
-    'The following directory has been given : ' + req.params.logicalName + ' Model generated under backend/outputs' 
-
-  })
-  generateModel(inputURL,callback);
+  console.log(inputURL);
+  //console.log(input2[Object.keys(input2)[0]]);
+  controller.generateModel('/'+inputURL+inputURL2,callback);
 });
+
+// router.get('/generateModel/:logicalName*', function(req,res,next){
+//   //res.send('The following directory has been given : ' + req.params.logicalName + ' ,Model generated under backend/outputs');
+//   res.sendfile("src/views/testpage.html");
+//   console.log('Generator Page Get');
+// });
 
 
 router.get('/process_withconfig/:configName', function(req, res, next) {
