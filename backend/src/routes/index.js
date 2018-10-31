@@ -8,42 +8,18 @@ router.get('/', function(req, res, next) {
   console.log('Homepage');
 });
 
-
-// Gets username and password from /testpage -- currently just used for testing
-router.post('/testpage' , function (req, res, next) {
-  console.log("Post Requested")
-  var user_name=req.body.user;
-  var password=req.body.password;
-  console.log("User name = "+user_name+", password is "+password);
-  res.end("yes");
-  
-});
-router.get('/testpage', function(req, res, next) {
-  res.sendfile("src/views/testpage.html");  
-  console.log('TestPageGet');
-});
-
-//Doesn't work with post ? Try GET for now
+//TODO : Doesn't work with post ? Try GET for now
+//Tested correct directory is /Users/musta/Downloads/test
 router.get('/generateModel/:logicalName*', function(req,res,next){
-  const inputURL = req.params.logicalName; // makeshift -- should be req.params.logicalName?
-  const input2 = req.params;
-  const inputURL2 = input2[Object.keys(input2)[0]];
-  //var input = '/Users/musta/Downloads/test'; // local directory -- should be changed to URL/URI for general use? --WORKS
-  //var inputURL = req.body.user; //another temporary -- user inputs file directory into the username position -- WORKS but no json response?
+  const inputURL = req.params.logicalName; //this only grabs Users
+  const fullURL = req.params;
+  const inputURL2 = fullURL[Object.keys(fullURL)[0]]; // this grabs /musta/Downloads/test
   const callback = (responseGenerated) => res.send({
     response : responseGenerated
   });
-  console.log(inputURL);
-  //console.log(input2[Object.keys(input2)[0]]);
+  //hard code the '/' before 'Users' to get the final directory to be /Users/musta/Downloads/test
   controller.generateModel('/'+inputURL+inputURL2,callback);
 });
-
-// router.get('/generateModel/:logicalName*', function(req,res,next){
-//   //res.send('The following directory has been given : ' + req.params.logicalName + ' ,Model generated under backend/outputs');
-//   res.sendfile("src/views/testpage.html");
-//   console.log('Generator Page Get');
-// });
-
 
 router.get('/process_withconfig/:configName', function(req, res, next) {
   // currently just returns the config name passed in the url param
