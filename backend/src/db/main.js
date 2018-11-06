@@ -1,26 +1,5 @@
 const mongo = require('mongodb');
 
-/**
- * Connects to the specified mongo database
- * If the db does not exist, the function will create a new one
- * 
- * @param port 
- * @param dbName 
- * @callback (client, db) => any
- */
-const connect = (port, dbName, callback) => {
-    const MongoClient = mongo.MongoClient;
-    const url = "mongodb://" + port;
-
-    MongoClient.connect(url, {useNewUrlParser: true }, (err, client) => {
-        if (err) throw err;
-        console.log("Connected to MongoDB");
-        const db = client.db(dbName);
-
-        callback(client, db);
-    });
-
-};
 
 /**
  * @param collection 
@@ -62,7 +41,6 @@ const findAll = (collection, query = null, callback = null) => {
 }
 
 module.exports = {
-    connect: connect,
     insertData: insertData,
     findOne: findOne,
     findAll: findAll
