@@ -1,6 +1,6 @@
 # VIATRA-Generator-Frontend
 
-##DEV
+## DEV
 
 #### How to run the project
 Calling `npm start` in the project directory will 
