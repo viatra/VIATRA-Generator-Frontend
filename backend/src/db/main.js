@@ -20,10 +20,9 @@ const insertData = (collection, payload) => {
  * @callback (result) => any
  */
 const findOne = (collection, query, callback = null) => {
-    return collection.findOne(query, (err, result) => {
-        if (err) throw err;
-        if(callback !== null) callback(result);
-    })
+    return collection.findOne(query).then(result => {
+        callback(result);
+    }).catch(err => console.error(err));
 }
 
 /**
