@@ -1,6 +1,35 @@
 const express = require('express');
+const controller = require('../controllers/index.js');
+const multer = require('multer');
 const router = express.Router();
-const controller = require("../controllers/index.js");
+const support = require('../db/support.js');
+
+/**
+ * uidGenerated = hash generated from db.support
+ * returns object with object parameters uid, multer.destination and multer.filename
+ * if want to get specific object parameter, pathWithUID() for uid? pathWithUID.multer.destination?
+ */
+const generatePathWithUID = () => {
+  const pathWithUID = '/viatra-storage/inputs/' + support.generateUID();
+  
+  return {
+    pathWithUID: pathWithUID,
+    multer: {
+        destination: (req, file, cb) => {
+          cb(null, pathWithUID)
+        },
+        filename: (req, file, cb) => {
+          cb(null, file.filename);
+        }
+      }
+  };
+} 
+
+const generatedPathWithUID = generatePathWithUID();
+const storage = multer.diskStorage(generatedPathWithUID.multer);
+
+const upload = multer({ storage });
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -8,22 +37,12 @@ router.get('/', function(req, res, next) {
   console.log('Homepage');
 });
 
-//TODO : Doesn't work with post ? Try GET for now
-//Tested correct directory is /Users/musta/Downloads/test
-router.get('/generateModel/:logicalName*', function(req,res,next){
-  const inputURL = req.params.logicalName; //this only grabs Users
-  const fullURL = req.params;
-  const inputURL2 = fullURL[Object.keys(fullURL)[0]]; // this grabs /musta/Downloads/test
-  const callback = (responseGenerated) => res.send({
-    response : responseGenerated
-  });
-  //hard code the '/' before 'Users' to get the final directory to be /Users/musta/Downloads/test
-  controller.generateModel('/'+inputURL+inputURL2,callback);
+router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res, next) =>{
+  controller.generateModel(generatedPathWithUID.pathWithUID, res);
 });
 
-router.get('/process_withconfig/:configName', function(req, res, next) {
-  // currently just returns the config name passed in the url param
-  res.send('You gave the following config name: ' + req.params.configName); 
+router.post('/test', upload.array('test_field', 4), (req, res, next) => {
+  //controller.generateModel("/Users/rawadkaram/Desktop/test/configs", res);
 });
 
 module.exports = router;
