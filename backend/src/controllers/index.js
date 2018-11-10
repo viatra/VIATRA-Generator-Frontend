@@ -17,14 +17,14 @@ const OUTPUT_PATH = path.resolve(path.join(__dirname, '../..', 'outputs/models')
  * @param {object} sendResponse - response sent from the model generation
  */
 const generateModel = (inputPath, res) =>
- exec(`java -jar ${JAR_PATH} ${inputPath}/generation.vsconfig`, (err, stdout, stderr) => {
-        console.log('stdout: ' + stdout);
-        console.log('stderr: ' + stderr);
-        if(err) throw err;
-        
-        // After generating the output, save them to disk
-        console.log(LOG + "output is successfully generated, iterating over output...");
-        saveOutputToDisk(OUTPUT_PATH, '/viatra-storage/outputs', res);
+ exec(`java -jar ${JAR_PATH} ${inputPath}`, (err, stdout, stderr) => {
+    if(err) throw err;
+    console.log('stdout: ' + stdout);
+    console.log('stderr: ' + stderr);
+    
+    // After generating the output, save them to disk
+    console.log(LOG + "output is successfully generated, iterating over output...");
+    // saveOutputToDisk(OUTPUT_PATH, '/viatra-storage/outputs', res);
 });
 
 /**
