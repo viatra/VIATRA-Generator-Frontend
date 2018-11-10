@@ -22,7 +22,8 @@ router.get('/', function(req, res, next) {
   console.log('Homepage');
 });
 
-router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res, next) => {
+router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res) => {
+  // save the input files under a unique ID before passing to generateModel
   support.saveFilesToDir(req.files).then(newPath => {
       console.log(`LOG: Succesfully saved inputs to ${newPath}`);
       controller.generateModel(`${newPath}/generation.vsconfig`, res);
