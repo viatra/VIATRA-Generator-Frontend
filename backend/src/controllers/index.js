@@ -24,19 +24,8 @@ const generateModel = (inputPath, res) =>
     
     // After generating the output, save them to disk
     console.log(LOG + "output is successfully generated, iterating over output...");
-    // saveOutputToDisk(OUTPUT_PATH, '/viatra-storage/outputs', res);
+    saveOutputToDisk(OUTPUT_PATH, '/viatra-storage/outputs', res);
 });
-
-/**
- * Takes a list of files and saves to specified destination.
- * @param {Array} files 
- * @param {string} destination 
- */
-const saveInputToDisk = (files, destination, res) => {
-    //save files to destination/uniqueID/inputs?
-    //const uniqueID
-    
-}
 
 const saveOutputToDisk = (initialPath, destination, res) => {
     const uid = support.generateUID();
@@ -55,6 +44,5 @@ const saveOutputToDisk = (initialPath, destination, res) => {
 
 module.exports = {
     generateModel,
-    saveInputToDisk,
     saveOutputToDisk,
 };

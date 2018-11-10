@@ -16,17 +16,27 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
-/* GET home page. */
+/**
+ * ROUTE for homepage
+ */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Viatra Generator Service - backend' });
   console.log('Homepage');
 });
 
+/**
+ * ROUTE for model generation
+ */
 router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res) => {
   // save the input files under a unique ID before passing to generateModel
-  support.saveFilesToDir(req.files).then(newPath => {
+  support.saveInputFilesToDir(req.files).then(newPath => {
       console.log(`LOG: Succesfully saved inputs to ${newPath}`);
-      controller.generateModel(`${newPath}/generation.vsconfig`, res);
+
+      const vsconfig = `${newPath}/generation.vsconfig`; //path to config file after being stored
+      support.searchAndReplaceFile(vsconfig, /##/g, newPath + '/').then(() => {
+        console.log(`LOG: Replaced content of the file ${vsconfig}`);
+        controller.generateModel(vsconfig, res);
+      }).catch(err => { throw err; });
   });
 });
 
