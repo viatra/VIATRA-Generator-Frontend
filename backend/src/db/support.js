@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 /**
  * Generates a unique ID.
  */
@@ -7,6 +9,26 @@ const generateUID = () => {
     return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 };
 
+const saveFilesToDir = (files) => {
+    const pathWithUID = `/viatra-storage/inputs/${generateUID()}`;
+
+    fs.mkdirSync(pathWithUID);
+    return new Promise((resolve, reject) => {
+        files.forEach(file => {
+            fs.rename(
+                `/viatra-storage/inputs/${file.filename}`,
+                `${pathWithUID}/${file.filename}`,
+                (err) => {
+                    if (err) reject(err); 
+                }
+            );
+        });
+
+        resolve(pathWithUID)
+    });
+}
+
 module.exports = {
-    generateUID
+    generateUID,
+    saveFilesToDir
 }

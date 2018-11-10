@@ -4,29 +4,14 @@ const multer = require('multer');
 const router = express.Router();
 const support = require('../db/support.js');
 
-/**
- * uidGenerated = hash generated from db.support
- * returns object with object parameters uid, multer.destination and multer.filename
- * if want to get specific object parameter, pathWithUID() for uid? pathWithUID.multer.destination?
- */
-const generatePathWithUID = () => {
-  const pathWithUID = '/viatra-storage/inputs/' + support.generateUID();
-  
-  return {
-    pathWithUID: pathWithUID,
-    multer: {
-        destination: (req, file, cb) => {
-          cb(null, pathWithUID)
-        },
-        filename: (req, file, cb) => {
-          cb(null, file.filename);
-        }
-      }
-  };
-} 
-
-const generatedPathWithUID = generatePathWithUID();
-const storage = multer.diskStorage(generatedPathWithUID.multer);
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, '/viatra-storage/inputs/')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
 
 const upload = multer({ storage });
 
@@ -37,8 +22,11 @@ router.get('/', function(req, res, next) {
   console.log('Homepage');
 });
 
-router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res, next) =>{
-  controller.generateModel(generatedPathWithUID.pathWithUID, res);
+router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res, next) => {
+  support.saveFilesToDir(req.files).then(newPath => {
+      console.log('LOG: Succesfully saved inputs to dir with UID')
+      controller.generateModel(`${newPath}/generation.vsconfig`, res);
+  });
 });
 
 router.post('/test', upload.array('test_field', 4), (req, res, next) => {
