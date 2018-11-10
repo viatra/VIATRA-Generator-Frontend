@@ -2,8 +2,11 @@ const express = require('express');
 const controller = require('../controllers/index.js');
 const multer = require('multer');
 const router = express.Router();
-const support = require('../db/support.js');
+const helpers = require('../controllers/helpers.js');
 
+/**
+ * Multer input storage setup
+ */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, '/viatra-storage/inputs/')
@@ -12,8 +15,8 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   }
 });
-
 const upload = multer({ storage });
+const LOG = 'LOG: ';
 
 
 /**
@@ -27,21 +30,21 @@ router.get('/', function(req, res, next) {
 /**
  * ROUTE for model generation
  */
-router.post('/generateModel/:logicalName', upload.array('test_field', 4), (req, res) => {
+router.post('/generateModel/:logicalName', upload.array('generator_inputs', 4), (req, res) => {
   // save the input files under a unique ID before passing to generateModel
-  support.saveInputFilesToDir(req.files).then(newPath => {
-      console.log(`LOG: Succesfully saved inputs to ${newPath}`);
+  helpers.saveInputFilesToDir(req.files).then(newPath => {
+      console.log(LOG + `Succesfully saved inputs to ${newPath}`);
 
-      const vsconfig = `${newPath}/generation.vsconfig`; //path to config file after being stored
-      support.searchAndReplaceFile(vsconfig, /##/g, newPath + '/').then(() => {
-        console.log(`LOG: Replaced content of the file ${vsconfig}`);
-        controller.generateModel(vsconfig, res);
+      const vsconfig = `${newPath}/generation.vsconfig`;
+      helpers.searchAndReplaceFile(vsconfig, /##/g, newPath + '/').then(() => {
+        console.log(LOG + `Replaced content of the file ${vsconfig}`);
+        controller.generateModel(
+          vsconfig,
+          req.app.locals.collectionOutput, 
+          req.params.logicalName,
+        ).then(outputPayload => { res.send(outputPayload); });
       }).catch(err => { throw err; });
   });
-});
-
-router.post('/test', upload.array('test_field', 4), (req, res, next) => {
-  //controller.generateModel("/Users/rawadkaram/Desktop/test/configs", res);
 });
 
 module.exports = router;
