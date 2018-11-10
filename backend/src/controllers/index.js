@@ -2,7 +2,8 @@ const exec = require('child_process').exec;
 const fs = require('fs'); 
 const path = require('path');
 
-const support = require('../db/support.js');
+const helpers = require('./helpers.js');
+const mongo = require('../db/mongo.js');
 
 const LOG = 'LOG: ';
 // Path to jar file
@@ -13,18 +14,34 @@ const OUTPUT_PATH = path.resolve(path.join(__dirname, '../..', 'outputs/models')
 /**
  * Generates the model by executing the jar file
  * @param {string} inputPath - path to input folders
+ * @param {object} collectionOutput - collection where outputs will be inserted
+ * @param {string} logicalName - logical name of the inputs
  * @param {object} sendResponse - response sent from the model generation
  */
-const generateModel = (inputPath, res) =>
- exec(`java -jar ${JAR_PATH} ${inputPath}/generation.vsconfig`, (err, stdout, stderr) => {
+const generateModel = (inputPath, collectionOutput, logicalName, callback) => {
+    exec(`java -jar ${JAR_PATH} ${inputPath}/generation.vsconfig`, (err, stdout, stderr) => {
+        if(err) throw err;
         console.log('stdout: ' + stdout);
         console.log('stderr: ' + stderr);
-        if(err) throw err;
         
         // After generating the output, save them to disk
         console.log(LOG + "output is successfully generated, iterating over output...");
-        saveOutputToDisk(OUTPUT_PATH, '/viatra-storage/outputs', res);
-});
+        
+        // Save generated output to disk
+        saveOutputToDisk(OUTPUT_PATH, '/viatra-storage/outputs', (destination) => {
+            const payload = {
+                logicalName: logicalName,
+                outputPath: destination
+            }
+            
+            // Insert the generated output into the database
+            mongo.insertData(collectionOutput, payload, (result) => {
+                console.log(result.ops[0]);
+                callback(result.ops[0]);              
+            });
+        });
+    })
+};
 
 /**
  * Takes a list of files and saves to specified destination.
@@ -34,7 +51,7 @@ const generateModel = (inputPath, res) =>
 const saveInputToDisk = (files, destination, res) => {
     files.forEach(file => {
         const filePath = OUTPUT_PATH + '/' + file;
-        const uid = support.generatUID();
+        const uid = helpers.generatUID();
 
         fs.rename(filePath, (destination + '/'+ uid + '/' + file), (err) => {
             if (err) throw err;
@@ -48,18 +65,22 @@ const saveInputToDisk = (files, destination, res) => {
     });
 }
 
-const saveOutputToDisk = (initialPath, destination, res) => {
-    const uid = support.generateUID();
+/**
+ * Saves the generated output to the disk at the specified destination
+ * @param {string} initialPath - initial path of the generated output
+ * @param {string} destination - final path of the generated output
+ * @param {function} callback 
+ */
+const saveOutputToDisk = (initialPath, destination, callback = null) => {
+    const uid = helpers.generateUID();
+    const destinationWithUid = destination + '/'+ uid;
 
     // move the path from project dir to disk
-    fs.rename(initialPath, (destination + '/'+ uid), (err) => {
+    fs.rename(initialPath, destinationWithUid, (err) => {
         if (err) throw err;
         console.log(LOG + initialPath + " became ", destination);
 
-        res.send({
-            isComplete: true,
-            message: "The output has been successfully stored under /viatra-storage/outputs"
-        });
+        if (callback) callback(destinationWithUid);
     });
 }
 
