@@ -3,12 +3,10 @@
  * 
  * @param {object} collection 
  * @param {object} payload 
- * @callback (result) => any
+ * @returns new Promise()
  */
-const insertData = (collection, payload, callback = null) => {
-    return collection.insertOne(payload, { w:1 }).then(result => {
-        if (callback) callback(result);
-    }).catch(err => { throw (err) });
+const insertData = (collection, payload) => {
+    return collection.insertOne(payload, { w:1 });
 }
 
 /**
@@ -16,12 +14,10 @@ const insertData = (collection, payload, callback = null) => {
  * 
  * @param collection 
  * @param query 
- * @callback (result) => any
+ * @returns new Promise()
  */
-const findOne = (collection, query, callback = null) => {
-    return collection.findOne(query).then(result => {
-        if (callback) callback(result);
-    }).catch(err => { throw (err) });
+const findOne = (collection, query) => {
+    return collection.findOne(query);
 }
 
 /**
@@ -29,12 +25,10 @@ const findOne = (collection, query, callback = null) => {
  * 
  * @param collection 
  * @param query 
- * @callback (items) => any
+ * @returns new Promise()
  */
-const findAll = (collection, query = null, callback = null) => {
-    collection.find(query).toArray().then(result => {
-        if(callback) callback(result);
-    }).catch(err => { throw (err) });
+const findAll = (collection, query = null) => {
+    return collection.find(query).toArray();
 }
 
 module.exports = {
