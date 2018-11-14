@@ -37,15 +37,14 @@ const generateModel = (inputPath, collectionOutput, logicalName) => {
                 del([OUTPUT_PATH + '/**']).then(paths => {
                     console.log(LOG + 'Deleted files and folders:\n', paths.join('\n'));
                 })
-
-                const payload = {
-                    logicalName: logicalName,
-                    outputPath: newPath
-                }
                 
                 // Insert the generated output into the database
+                const payload = {
+                    logicalName: logicalName,
+                    path: newPath
+                };
                 mongo.insertData(collectionOutput, payload).then(result => {
-                    console.log('Output successfully inserted in db', result.ops[0]);
+                    console.log(LOG + 'Output successfully inserted in db', result.ops[0]);
                     resolve(payload);              
                 }).catch(err => { reject (err) });
             });
