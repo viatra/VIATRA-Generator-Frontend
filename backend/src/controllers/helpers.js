@@ -67,10 +67,10 @@ const buildOutputUrls = (dirPath, logicalName) => {
     return new Promise((resolve, reject) => {
         fs.readdir(dirPath, (err, files) => {
             if (err) reject(err);
-            const outputs = { completeDir: route() };
+            const outputs = { allFiles: route() };
 
             files.forEach(file => {
-                outputs[file.substr(0, '.')] = route(file);
+                outputs[file] = route(file);
             });
 
             resolve(outputs);
