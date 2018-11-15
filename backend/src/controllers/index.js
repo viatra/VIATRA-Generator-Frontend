@@ -71,7 +71,7 @@ const saveOutputToDisk = (initialPath, destination) => {
             resolve(destinationWithUid);
         })
     });
-}
+};
 
 module.exports = {
     generateModel,

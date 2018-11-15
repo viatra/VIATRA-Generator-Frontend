@@ -1,6 +1,10 @@
 const express = require('express');
-const controller = require('../controllers/index.js');
+const child_process = require('child_process');
 const multer = require('multer');
+
+
+const controller = require('../controllers/index.js');
+const enums = require('../enums');
 const mongo = require('../db/mongo.js');
 
 const router = express.Router();
@@ -31,10 +35,13 @@ router.get('/', function(req, res, next) {
 
 /**
  * ROUTE for model generation
+ * @query (string) logicalName
  */
 router.post('/generateModel', upload.array('generator_inputs', 4), (req, res) => {
-  console.log(LOG + req.query.logicalName);
-
+  if (!req.files || req.files.length === 0) {
+    res.status(400).send({ message: 'Files expected at {generator_inputs} field!' });
+    return;
+  }
   // save the input files under a unique ID before passing to generateModel
   helpers.saveInputFilesToDir(req.files).then(newPath => {
       console.log(LOG + `Succesfully saved inputs to ${newPath}`);
@@ -49,19 +56,60 @@ router.post('/generateModel', upload.array('generator_inputs', 4), (req, res) =>
           path: newPath
         };
         mongo.insertData(req.app.locals.collectionInput, payload).then(result => {
-          console.log(LOG + 'Inserted input in db');
-          console.log()
+          console.log(LOG + 'Inserted input in db', result.ops[0]);
 
           controller.generateModel(
               vsconfig,
               req.app.locals.collectionOutput, 
               req.query.logicalName
-          ).then(outputPayload => { res.send(outputPayload); })
-          .catch(err => { throw err; });
+          ).then(output => {
+              // once model generation is complete,
+              // it's time to build the response for the user
+              helpers.buildOutputUrls(output.path, output.logicalName).then(outputs => {
+                const response = {
+                  status: enums.ModelGenerationStatus.SUCCESS,
+                  outputs: outputs,
+                  logicalName: output.logicalName,
+                  message: "Use the outputs in the browser to download them individually"
+                }
+                res.send(response); 
+              }).catch(err => { throw err; })
+          }).catch(err => { throw err; });
       }).catch(err => { throw err; });
     }).catch(err => { throw err; })
-        
   });
+});
+
+router.get('/fetch/input/resource', (req, res) => {
+  
+});
+
+/**
+ * Fetches an output resource from mongo db
+ * @query (string) logicalName
+ * @query (string) file : file with extension
+ */
+router.get('/fetch/output/resource', (req, res) => {
+  if (!req.query.logicalName) 
+    res.status(404).send({ message: 'Please provide {logicalName} query params' });
+
+  const query = {
+    logicalName: req.query.logicalName
+  }
+  mongo.findOne(req.app.locals.collectionOutput, query).then(result => {
+    const file = req.query.file;
+    if (file) {
+      const filePath = result.path + '/' + file;
+      res.download(filePath);
+    } else {
+      const zip = 'output.zip';
+      child_process.exec(`zip -r ${zip} ${result.path}`, { cwd: result.path }, (err) => {
+        if (err) throw err;
+        res.download(result.path + '/' + zip)
+      });
+    }
+    
+  }).catch(err => { throw err; });
 });
 
 module.exports = router;
