@@ -1,5 +1,6 @@
 const express = require('express');
 const child_process = require('child_process');
+const fs = require('fs');
 const multer = require('multer');
 
 
@@ -37,7 +38,7 @@ router.get('/', function(req, res, next) {
  * ROUTE for model generation
  * @query (string) logicalName
  */
-router.post('/generateModel', upload.array('generator_inputs', 4), (req, res) => {
+router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) => {
   if (!req.files || req.files.length === 0) {
     res.status(400).send({ message: 'Files expected at {generator_inputs} field!' });
     return;
@@ -80,10 +81,6 @@ router.post('/generateModel', upload.array('generator_inputs', 4), (req, res) =>
   });
 });
 
-router.get('/fetch/input/resource', (req, res) => {
-  
-});
-
 /**
  * Fetches an output resource from mongo db
  * @query (string) logicalName
@@ -91,7 +88,7 @@ router.get('/fetch/input/resource', (req, res) => {
  */
 router.get('/fetch/output/resource', (req, res) => {
   if (!req.query.logicalName) 
-    res.status(404).send({ message: 'Please provide {logicalName} query params' });
+    res.status(400).send({ message: 'Please provide {logicalName} query params' });
 
   const query = {
     logicalName: req.query.logicalName
@@ -100,7 +97,14 @@ router.get('/fetch/output/resource', (req, res) => {
     const file = req.query.file;
     if (file) {
       const filePath = result.path + '/' + file;
-      res.download(filePath);
+      if (fs.existsSync(filePath)) {
+        // download the file if found
+        res.download(filePath);
+      } else {
+        res.status(404).send(
+          'Specified file cannot be found on disk. Make sure to specify the full name of the file'
+        );
+      }
     } else {
       const zip = 'output.zip';
       child_process.exec(`zip -r ${zip} ${result.path}`, { cwd: result.path }, (err) => {
@@ -109,7 +113,7 @@ router.get('/fetch/output/resource', (req, res) => {
       });
     }
     
-  }).catch(err => { throw err; });
+  }).catch(err => { res.status(404).send('Specified logical name cannot be found.') });
 });
 
 module.exports = router;
