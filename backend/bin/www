@@ -4,9 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../src/app');
-var debug = require('debug')('backend:server');
-var http = require('http');
+const app = require('../src/app');
+const debug = require('debug')('backend:server');
+const http = require('http');
+const mongo = require('mongodb');
 
 /**
  * Get port from environment and store in Express.
@@ -21,13 +22,32 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
+// Create MongoClient and port
+const MongoClient = mongo.MongoClient;
+const dbPort = 'localhost:27017';
+const url = "mongodb://" + dbPort;
+
 /**
- * Listen on provided port, on all network interfaces.
+ * Connects to the mongo database
  */
-console.log('Listening on port ' + port)
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+MongoClient.connect(url, { useNewUrlParser: true }).then(client => {
+  // Create database: viatra_db
+  const db = client.db('viatra_db');
+  
+  // Create collections in the viatra_db database
+  const collectionInput = db.collection('inputs'); 
+  const collectionOutput = db.collection('outputs');
+
+  // Used to share the collections between routes
+  app.locals.collectionInput = collectionInput;
+  app.locals.collectionOutput = collectionOutput;
+
+  // Listen on provided port, on all network interfaces.
+  console.log('Listening on port ' + port)
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+}).catch(error => console.error(error));
 
 /**
  * Normalize a port into a number, string, or false.
