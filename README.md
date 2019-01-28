@@ -1,6 +1,7 @@
 # VIATRA-Generator-Frontend
 
 ## How to run the project
+
 Calling `npm start` in the project directory will 
 run the project on port 8000.
 
@@ -37,6 +38,3 @@ Windows
 > mongod
  ```
  This will run an instance of mongo on the machine and the backend will now be able to connect to the machine.
- 
-
-
