@@ -1,0 +1,53 @@
+.row {
+    display: flex;
+}
+.row-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row-center {
+    display: flex;
+    justify-content: center;
+}
+
+.row-between {
+    display: flex;
+    justify-content: space-between;
+}
+
+.row-around {
+    display: flex;
+    justify-content: space-around;
+}
+.row-end {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.row-large-only {
+    display: flex;
+}
+
+.title {
+    font-weight: lighter;
+    font-size: 42px;
+    font-family: Gothic A1, sans-serif;
+}
+
+.subtitle {
+    font-weight: lighter;
+    font-size: 29px;
+    font-family: Gothic A1, sans-serif;
+}
+
+.text {
+    font-size: 23px;
+    font-family: Gothic A1, sans-serif;
+}
+
+@media (max-width: 850px) {
+    .row-large-only {
+        display: inline-block;
+    }
+}

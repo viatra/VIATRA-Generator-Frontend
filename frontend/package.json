@@ -1,0 +1,31 @@
+{
+  "name": "viatra-generator-frontend",
+  "version": "1.0.0",
+  "description": "Front-end project of Viatra",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viatra/VIATRA-Generator-Frontend.git"
+  },
+  "author": "",
+  "license": "Eclipse Public License",
+  "bugs": {
+    "url": "https://github.com/viatra/VIATRA-Generator-Frontend/issues"
+  },
+  "homepage": "https://github.com/viatra/VIATRA-Generator-Frontend#readme",
+  "devDependencies": {
+    "react-scripts": "^1.1.5"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "prop-types": "^15.6.2",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2"
+  }
+}
