@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import AceEditor from 'react-ace';
-import ace from 'brace';
-import 'brace/mode/java';
+
+import 'brace/mode/javascript';
 import 'brace/theme/github';
 
 import './css/App.css';
@@ -16,9 +16,16 @@ class App extends Component {
 		this.setState({
             code: newValue
         });
-	};
+    };
+    
+    getLines = code => {
+        return code.split('\n');
+    };
 
     render() {
+        const { code } = this.state;
+
+        console.log(this.getLines(code));
         return (
             <div>
                 <div className="row app-bar">
@@ -32,12 +39,12 @@ class App extends Component {
 
 				<AceEditor
                     style={{ width: '100%' }}
-					mode="javascript"
-                    value={this.state.code}
+                    value={code}
 					theme="github"
 					onChange={this.onChange}
 					name="UNIQUE_ID_OF_DIV"
-					editorProps={{$blockScrolling: true}}
+					// annotations={[{ row: 1, type: 'error', text: 'Some error.' }]}
+					editorProps={{ $blockScrolling: true }}
 				/>,
             </div>
         )
