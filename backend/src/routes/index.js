@@ -4,7 +4,8 @@ const fs = require('fs');
 const multer = require('multer');
 
 
-const controller = require('../controllers/index.js');
+const controller = require('../controllers/modelGeneration.js');
+const fetchers = require('../controllers/fetchers.js');
 const enums = require('../enums');
 const mongo = require('../db/mongo.js');
 
@@ -82,7 +83,7 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
 });
 
 /**
- * Fetches an output resource from mongo db
+ * ROUTE for fetching an output resource from mongo db
  * @query (string) logicalName
  * @query (string) file : file with extension
  */
@@ -115,5 +116,46 @@ router.get('/fetch/output/resource', (req, res) => {
     
   }).catch(err => { res.status(404).send('Specified logical name cannot be found.') });
 });
+
+/**
+ * ROUTE for fetching all .ecore files stored on the file system
+ */
+router.get('/fetch-ecores', (req, res) => {
+  fetchers.fetchInputFiles('/viatra-storage/inputs/').then(inputs => {
+    res.send(
+      inputs.filter(input => input.files.length > 0)
+      .map(input => ({
+        dir: `/viatra-storage/inputs/${input.dir}`,
+        files: input.files.filter(file => file.includes('.ecore'))[0]
+      }))
+    );
+  }).catch(err => res.status(404).send(err));
+})
+
+/**
+ * ROUTE for fetching config given a .ecore file
+ * @query (string) id : unique id of directory
+ */
+router.get('/fetch-config', (req, res) => {
+  if(!req.query.id) {
+    res.status(400).send({ error: '{id} query param not specified' });
+  }
+
+  const fullpath = `/viatra-storage/inputs/${req.query.id}`;
+  fs.readdir(fullpath, (err, files)=> {
+    const vsconfig = files.filter((file) => file.includes('.vsconfig'));
+    if(vsconfig.length === 0) {
+      res.status(400).send({ 
+        error: '.vsconfig file could not be found! Make sure you are passing the correct directory'
+      });
+    }
+    const vsconfigPath = `${fullpath}/${vsconfig[0]}`;
+
+    fetchers.readAndExtractVSConfig(vsconfigPath).then(config => {
+      res.status(200).send(config);
+    });
+  })
+  // fetchers.readFile(fullpath);
+})
 
 module.exports = router;
