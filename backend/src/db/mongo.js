@@ -32,7 +32,7 @@ const findAll = (collection, query = null) => {
 }
 
 module.exports = {
-    insertData: insertData,
-    findOne: findOne,
-    findAll: findAll
+    insertData,
+    findOne,
+    findAll
 }

@@ -3,20 +3,22 @@ const child_process = require('child_process');
 const fs = require('fs');
 const multer = require('multer');
 
-
 const controller = require('../controllers/modelGeneration.js');
 const fetchers = require('../controllers/fetchers.js');
-const enums = require('../enums');
+const enums = require('../enums.js');
 const mongo = require('../db/mongo.js');
 
 const router = express.Router();
 const helpers = require('../controllers/helpers.js');
+
+const LOG = 'LOG: ';
 
 /**
  * Multer input storage setup
  */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
+    // TODO: direct each type of file to it's own path
     cb(null, '/viatra-storage/inputs/')
   },
   filename: (req, file, cb) => {
@@ -24,15 +26,12 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
-const LOG = 'LOG: ';
 
 
 /**
- * ROUTE for homepage
+ * ROUTE for root page
  */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Viatra Generator Service - backend' });
-  console.log('Homepage');
 });
 
 /**
