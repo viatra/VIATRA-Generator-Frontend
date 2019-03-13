@@ -39,45 +39,58 @@ router.get('/', function(req, res, next) {
  * @query (string) logicalName
  */
 router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) => {
+  if(fs.existsSync())
+
+  // Validate POST body is not empty
   if (!req.files || req.files.length === 0) {
     res.status(400).send({ message: 'Files expected at {generator_inputs} field!' });
     return;
+  } else if (req.files.length < 4) {
+    res.status(400).send({ message: `Unexpected number of files ${req.files.length}, expected 4!` });
+    return;
   }
-  // save the input files under a unique ID before passing to generateModel
-  helpers.saveInputFilesToDir(req.files).then(newPath => {
-      console.log(LOG + `Succesfully saved inputs to ${newPath}`);
 
-      const vsconfig = `${newPath}/generation.vsconfig`;
-      helpers.searchAndReplaceFile(vsconfig, /##/g, newPath + '/').then(() => {
-        console.log(LOG + `Replaced content of the file ${vsconfig}`);
+  // Save the input files under correct directories
+  helpers.saveInputFilesToDirs(req.files).then(newPaths => {
+    console.log(newPaths);
+    res.send(newPaths);
+    //   console.log(LOG + `Succesfully saved inputs to ${newPath}`);
 
-        // save input data to db
-        const payload = {
-          logicalName: req.query.logicalName,
-          path: newPath
-        };
-        mongo.insertData(req.app.locals.collectionInput, payload).then(result => {
-          console.log(LOG + 'Inserted input in db', result.ops[0]);
+    //   const vsconfig = `${newPath}/generation.vsconfig`;
+    //   helpers.searchAndReplaceFile(vsconfig, /##/g, newPath + '/').then(() => {
+    //     console.log(LOG + `Replaced content of the file ${vsconfig}`);
 
-          controller.generateModel(
-              vsconfig,
-              req.app.locals.collectionOutput, 
-              req.query.logicalName
-          ).then(output => {
-              // once model generation is complete,
-              // it's time to build the response for the user
-              helpers.buildOutputUrls(output.path, output.logicalName).then(outputs => {
-                const response = {
-                  status: enums.ModelGenerationStatus.SUCCESS,
-                  outputs: outputs,
-                  logicalName: output.logicalName,
-                  message: "Use the outputs in the browser to download them individually"
-                }
-                res.send(response); 
-              }).catch(err => { throw err; })
-          }).catch(err => { throw err; });
-      }).catch(err => { throw err; });
-    }).catch(err => { throw err; })
+    //     // save input data to db
+    //     const payload = {
+    //       logicalName: req.query.logicalName,
+    //       path: newPath
+    //     };
+    //     mongo.insertData(req.app.locals.collectionInput, payload).then(result => {
+    //       console.log(LOG + 'Inserted input in db', result.ops[0]);
+
+    //       controller.generateModel(
+    //           vsconfig,
+    //           req.app.locals.collectionOutput, 
+    //           req.query.logicalName
+    //       ).then(output => {
+    //           // once model generation is complete,
+    //           // it's time to build the response for the user
+    //           helpers.buildOutputUrls(output.path, output.logicalName).then(outputs => {
+    //             const response = {
+    //               status: enums.ModelGenerationStatus.SUCCESS,
+    //               outputs: outputs,
+    //               logicalName: output.logicalName,
+    //               message: "Use the outputs in the browser to download them individually"
+    //             }
+    //             res.send(response); 
+    //           }).catch(err => { throw err; })
+    //       }).catch(err => { throw err; });
+    //   }).catch(err => { throw err; });
+    // }).catch(err => { throw err; })
+  }).catch((errCode, err) => {
+    if (errCode === 0){
+      res.status(400).send(err)
+    }
   });
 });
 
@@ -153,8 +166,7 @@ router.get('/fetch-config', (req, res) => {
     fetchers.readAndExtractVSConfig(vsconfigPath).then(config => {
       res.status(200).send(config);
     });
-  })
-  // fetchers.readFile(fullpath);
+  });
 })
 
 module.exports = router;

@@ -1,11 +1,24 @@
 const fs = require('fs');
+const fs_root = require('../../bin/config.json').fs_root;
+
+const viatraStorage = {
+    inputs: `${fs_root}/inputs`,
+    domains: `${fs_root}/domains`,
+    runs: `${fs_root}/runs`,
+
+    metamodels: `${fs_root}/domains/metamodels`,
+    constraints: `${fs_root}/domains/constraints`,
+    models: `${fs_root}/domains/model`,
+
+    configs: `${fs_root}/runs/configs`,
+    outputs: `${fs_root}/runs/outputs`
+}
 
 /**
  * Generates a unique ID.
  */
 const generateUID = () => {
     const S4 = () => (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-    
     return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
 };
 
@@ -14,22 +27,59 @@ const generateUID = () => {
  * with a unique ID
  * @param {array} files
  */
-const saveInputFilesToDir = (files) => {
-    const pathWithUID = `/viatra-storage/inputs/${generateUID()}`;
-
-    fs.mkdirSync(pathWithUID);
+const saveInputFilesToDirs = (files) => {
     return new Promise((resolve, reject) => {
-        files.forEach(file => {
-            fs.rename(
-                `/viatra-storage/inputs/${file.filename}`,
-                `${pathWithUID}/${file.filename}`,
-                (err) => {
-                    if (err) reject(err); 
-                }
+        if (!fs.existsSync(fs_root)) {
+            reject(0, `${fs_root} can't be found! Make sure it is on your machine with proper 
+            permissions. Check https://github.com/viatra/VIATRA-Generator-Frontend for more info.`
             );
+        }
+
+        // Create directories in FS if it doesn't already exist
+        Object.keys(viatraStorage).forEach(key => {
+            if (!fs.existsSync(viatraStorage[key])) {
+                fs.mkdirSync(viatraStorage[key])
+            }
         });
 
-        resolve(pathWithUID)
+        const handleError = (err) => { if (err) reject(1, err) };
+        const newPaths = {};
+
+        files.forEach(file => {
+            const { filename } = file;
+            if (filename.includes('.ecore')) {
+                newPaths.metamodel = `${viatraStorage.metamodels}/${filename}`;
+                fs.rename(
+                    `${viatraStorage.inputs}/${filename}`,
+                    newPaths.metamodel,
+                    handleError 
+                );
+            } else if (filename.includes('.vql')) {
+                newPaths.constraint = `${viatraStorage.constraints}/${filename}`;
+                fs.rename(
+                    `${viatraStorage.inputs}/${filename}`,
+                    newPaths.constraint,
+                    handleError
+                );
+            } else if (filename.includes('.xmi')) {
+                newPaths.model = `${viatraStorage.models}/${filename}`;
+                fs.rename(
+                    `${viatraStorage.inputs}/${filename}`,
+                    newPaths.model,
+                    handleError
+                );
+            } else if (filename.includes('.vsconfig')) {
+                newPaths.config = `${viatraStorage.configs}/${filename}`;
+                fs.rename(
+                    `${viatraStorage.inputs}/${filename}`,
+                    newPaths.config,
+                    handleError
+                );
+            }
+        });
+
+        // Send back modified paths for input files
+        resolve(newPaths)
     });
 }
 
@@ -139,7 +189,7 @@ const parseVSConfig = (rd) => {
 
 module.exports = {
     generateUID,
-    saveInputFilesToDir,
+    saveInputFilesToDirs,
     searchAndReplaceFile,
     buildOutputUrls,
     parseVSConfig

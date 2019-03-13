@@ -3,6 +3,8 @@
     "db_name": "viatra_db",
     "db_port": 27017,
 
+    "fs_root": "/viatra-storage",
+
     "collections": {
         "file_tracker": "file_tracker"
     }
