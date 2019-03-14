@@ -1,5 +1,6 @@
 const fs = require('fs');
 const fs_root = require('../../bin/config.json').fs_root;
+const readline = require('readline');
 
 const viatraStorage = {
     inputs: `${fs_root}/inputs`,
@@ -19,13 +20,29 @@ const viatraStorage = {
  */
 const generateUID = () => {
     const S4 = () => (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-    return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+    return (S4()+S4()+"-"+S4()+"-"+S4());
+};
+
+/**
+ * Will fetch all input files uploaded on the server
+ * @param {string} path 
+ */
+const fetchInputFiles = (path) => {
+    return new Promise((resolve, reject) =>
+        fs.readdir(path, (err, subDirs) => {
+            if(err) reject(err);
+            resolve(subDirs.map(subDir => ({
+                dir: subDir,
+                files: fs.readdirSync(`${path}/${subDir}`)
+            })))
+        })
+    );
 };
 
 /**
  * Saves the inputs uploaded by a user under /viatra-storage/inputs/
- * with a unique ID
- * @param {array} files
+ * to the proper directories on the file system
+ * @param {array} files : Array of length 4
  */
 const saveInputFilesToDirs = (files) => {
     return new Promise((resolve, reject) => {
@@ -43,7 +60,12 @@ const saveInputFilesToDirs = (files) => {
         });
 
         const handleError = (err) => { if (err) reject(1, err) };
-        const newPaths = {};
+        const newPaths = {
+            metamodel: undefined,
+            constraint: undefined,
+            model: undefined,
+            config: undefined
+        };
 
         files.forEach(file => {
             const { filename } = file;
@@ -84,26 +106,64 @@ const saveInputFilesToDirs = (files) => {
 }
 
 /**
- * Searches for regex match in a file 
- * and replaces ALL occurences of it
+ * Searches for the regex expessions given (matches)
+ * and replaces the first occurence of it
  * 
  * @param {string} file 
- * @param {regex} match 
- * @param {string} replacement 
+ * @param {regex} matches 
+ * @param {string} replacements 
  */
-const searchAndReplaceFile = (file, match, replacement) => {
+const searchAndReplaceFiles = (file, matches, replacements) => {
     return new Promise((resolve, reject) => {
-        fs.readFile(file, 'utf8', (err,data) => {
+        fs.readFile(file, 'utf8', (err, data) => {
             if (err) reject(err);
-            const result = data.replace(match, replacement);
+
+            matches.forEach((match, index) => {
+                data = data.replace(match, replacements[index]);
+            });
           
-            fs.writeFile(file, result, 'utf8', (err) => {
+            fs.writeFile(file, data, 'utf8', (err) => {
                 if (err) reject(err);
                 resolve();
-            });
+            }); 
           });
     }); 
 }
+
+const fetchNsURIFromMetaModel = (file) => {
+    if (!file.includes('.ecore')) {
+        return;
+    }
+
+    return new Promise((resolve, reject) => {
+        fs.readFile(file, 'utf8', (err, data) => {
+            if (err) reject(err);
+
+            const nsURI = data.match(/nsURI="(.*?)\"/)[0];
+            const trimmed = nsURI.substring(nsURI.indexOf('"') + 1, nsURI.length - 1);
+            resolve(trimmed);
+        });
+    });
+}
+
+/**
+ * Saves the generated output to the disk at the specified destination
+ * @param {string} initialPath - initial path of the generated output
+ * @param {string} destination - final path of the generated output
+ * @param {function} callback 
+ */
+const saveOutputToDisk = (initialPath) => {
+    const { outputs } = viatraStorage;
+
+    return new Promise((resolve, reject) => {
+        const outputFile = `${outputs}/${generateUID()}.xmi`;
+        // move the path from project dir to disk
+        fs.rename(`${initialPath}/1.xmi`, outputFile, (err) => {
+            if (err) reject(err);    
+            resolve(outputFile);
+        });
+    });
+};
 
 /**
  * Function to build url for fetching output generated:
@@ -186,11 +246,35 @@ const parseVSConfig = (rd) => {
     });
 }
 
+/**
+ * Will read the given file and extract all the
+ * editable information from the .vsconfig
+ * @param {string} path 
+ */
+const readAndExtractVSConfig = (path) => {
+    const rd = readline.createInterface({
+        input: fs.createReadStream(path),
+        console: false
+    });
+    
+    
+    return new Promise((resolve) => {
+        parseVSConfig(rd).then((config) => {
+            resolve(config);
+        });
+    });  
+};
+
 
 module.exports = {
     generateUID,
+    fetchInputFiles,
     saveInputFilesToDirs,
-    searchAndReplaceFile,
+    searchAndReplaceFiles,
+    fetchNsURIFromMetaModel,
+    saveOutputToDisk,
     buildOutputUrls,
-    parseVSConfig
+
+    parseVSConfig,
+    readAndExtractVSConfig,
 }

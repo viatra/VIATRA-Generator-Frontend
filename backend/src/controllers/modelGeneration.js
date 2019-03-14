@@ -4,15 +4,9 @@ const del = require('del');
 const path = require('path');
 
 const helpers = require('./helpers.js');
-const mongo = require('../db/mongo.js');
 
 const LOG = 'LOG: ';
-// Path to jar file
 const JAR_PATH = __dirname + '/aa.jar';
-// Config output specification needs to point to 'outputs/models'
-// ./controllers + go back + outputs/models
-const OUTPUT_PATH = path.resolve(path.join(__dirname, '../..', 'outputs'));
-const MODELS = OUTPUT_PATH + '/models';
 
 /**
  * Generates the model by executing the jar file
@@ -21,59 +15,35 @@ const MODELS = OUTPUT_PATH + '/models';
  * @param {string} logicalName - logical name of the inputs
  * @param {object} sendResponse - response sent from the model generation
  */
-const generateModel = (inputPath, collectionOutput, logicalName) => {
+const generateModel = (inputPath) => {
+    /**
+     * Path to generated output after running jar file
+    */
+    const OUTPUT_PATH = path.resolve(path.join(__dirname, '../..', 'outputs'));
+    const MODELS = OUTPUT_PATH + '/models';
+    const { saveOutputToDisk } = helpers;
+
     return new Promise((resolve, reject) => {
         exec(`java -jar ${JAR_PATH} ${inputPath}`, (err, stdout, stderr) => {
             if(err) throw err;
             console.log('stdout: ' + stdout);
             console.log('stderr: ' + stderr);
             
-            // After generating the output, save them to disk
-            console.log(LOG + "output is successfully generated, iterating over output...");
-            
-            // Save generated output to disk
-            saveOutputToDisk(MODELS, '/viatra-storage/outputs').then(newPath => {
+            // // Save generated output to disk
+            saveOutputToDisk(MODELS).then(outputPath => {
                 // delete output in project for cleanup
                 del([OUTPUT_PATH + '/**']).then(paths => {
                     console.log(LOG + 'Deleted files and folders:\n', paths.join('\n'));
-                })
+                });
                 
-                // Insert the generated output into the database
-                const payload = {
-                    logicalName: logicalName,
-                    path: newPath
-                };
-                mongo.insertData(collectionOutput, payload).then(result => {
-                    console.log(LOG + 'Output successfully inserted in db', result.ops[0]);
-                    resolve(payload);              
-                }).catch(err => { reject (err) });
-            });
+                resolve(outputPath);
+            }).catch(err => reject(err));
         })
     });
 };
 
-/**
- * Saves the generated output to the disk at the specified destination
- * @param {string} initialPath - initial path of the generated output
- * @param {string} destination - final path of the generated output
- * @param {function} callback 
- */
-const saveOutputToDisk = (initialPath, destination) => {
-    const uid = helpers.generateUID();
-    const destinationWithUid = destination + '/'+ uid;
 
-    return new Promise((resolve, reject) => {
-        // move the path from project dir to disk
-        fs.rename(initialPath, destinationWithUid, (err) => {
-            if (err) reject(err);
-            console.log(LOG + initialPath + " became ", destinationWithUid);
-    
-            resolve(destinationWithUid);
-        })
-    });
-};
 
 module.exports = {
-    generateModel,
-    saveOutputToDisk,
+    generateModel
 };

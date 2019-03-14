@@ -4,7 +4,6 @@ const fs = require('fs');
 const multer = require('multer');
 
 const controller = require('../controllers/modelGeneration.js');
-const fetchers = require('../controllers/fetchers.js');
 const enums = require('../enums.js');
 const mongo = require('../db/mongo.js');
 
@@ -52,41 +51,39 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
 
   // Save the input files under correct directories
   helpers.saveInputFilesToDirs(req.files).then(newPaths => {
-    console.log(newPaths);
-    res.send(newPaths);
-    //   console.log(LOG + `Succesfully saved inputs to ${newPath}`);
+    console.log(LOG + 'Succesfully saved inputs:', newPaths);
+    const { metamodel, config, constraint, model } = newPaths;
+    /**
+     * Regex to match file names
+     */
+    const matchMetamodel = /"(.*?)\.ecore"/;
+    const matchConstraint = /"(.*?)\.vql"/;
+    const matchModel = /"(.*?)\.xmi"/;
 
-    //   const vsconfig = `${newPath}/generation.vsconfig`;
-    //   helpers.searchAndReplaceFile(vsconfig, /##/g, newPath + '/').then(() => {
-    //     console.log(LOG + `Replaced content of the file ${vsconfig}`);
+    helpers.searchAndReplaceFiles(
+      config, 
+      [matchMetamodel, matchConstraint, matchModel], 
+      [`"${metamodel}"`, `"${constraint}"`, `"${model}"`]
+    ).then(() => {
+      console.log(LOG + `Replaced content of the file ${config}`);
 
-    //     // save input data to db
-    //     const payload = {
-    //       logicalName: req.query.logicalName,
-    //       path: newPath
-    //     };
-    //     mongo.insertData(req.app.locals.collectionInput, payload).then(result => {
-    //       console.log(LOG + 'Inserted input in db', result.ops[0]);
+      controller.generateModel(config).then(output => {
+        helpers.fetchNsURIFromMetaModel(metamodel).then(nsURI => {
+          const payload = {
+            logicalName: nsURI,
+            metamodel,
+            constraint,
+            "0": {
+              config,
+              output
+            }
+          };
 
-    //       controller.generateModel(
-    //           vsconfig,
-    //           req.app.locals.collectionOutput, 
-    //           req.query.logicalName
-    //       ).then(output => {
-    //           // once model generation is complete,
-    //           // it's time to build the response for the user
-    //           helpers.buildOutputUrls(output.path, output.logicalName).then(outputs => {
-    //             const response = {
-    //               status: enums.ModelGenerationStatus.SUCCESS,
-    //               outputs: outputs,
-    //               logicalName: output.logicalName,
-    //               message: "Use the outputs in the browser to download them individually"
-    //             }
-    //             res.send(response); 
-    //           }).catch(err => { throw err; })
-    //       }).catch(err => { throw err; });
-    //   }).catch(err => { throw err; });
-    // }).catch(err => { throw err; })
+          mongo.insertData(req.app.locals.collection_tracker, payload);
+
+        }).catch(err => { throw err; });
+      }).catch(err => { throw err; });
+    }).catch(err => { throw err; });
   }).catch((errCode, err) => {
     if (errCode === 0){
       res.status(400).send(err)
@@ -133,7 +130,7 @@ router.get('/fetch/output/resource', (req, res) => {
  * ROUTE for fetching all .ecore files stored on the file system
  */
 router.get('/fetch-ecores', (req, res) => {
-  fetchers.fetchInputFiles('/viatra-storage/inputs/').then(inputs => {
+  helpers.fetchInputFiles('/viatra-storage/inputs/').then(inputs => {
     res.send(
       inputs.filter(input => input.files.length > 0)
       .map(input => ({
@@ -163,7 +160,7 @@ router.get('/fetch-config', (req, res) => {
     }
     const vsconfigPath = `${fullpath}/${vsconfig[0]}`;
 
-    fetchers.readAndExtractVSConfig(vsconfigPath).then(config => {
+    helpers.readAndExtractVSConfig(vsconfigPath).then(config => {
       res.status(200).send(config);
     });
   });
