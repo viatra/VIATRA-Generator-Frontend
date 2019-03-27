@@ -3,56 +3,54 @@
 /**
  * Module dependencies.
  */
-
-const app = require('../src/app');
+const app = require('../src/app.js');
 const debug = require('debug')('backend:server');
 const http = require('http');
 const mongo = require('mongodb');
 
+const config = require('./config.json');
+const { app_port, db_name, db_port, collections } = config;
+
 /**
  * Get port from environment and store in Express.
  */
-
-var port = normalizePort(process.env.PORT || '8000');
+var port = normalizePort(process.env.PORT || app_port);
 app.set('port', port);
 
 /**
  * Create HTTP server.
  */
-
 var server = http.createServer(app);
 
-// Create MongoClient and port
+/**
+ * Create MongoClient and port
+ */
 const MongoClient = mongo.MongoClient;
-const dbPort = 'localhost:27017';
-const url = "mongodb://" + dbPort;
+const url = "mongodb://localhost:" + db_port;
 
 /**
  * Connects to the mongo database
  */
 MongoClient.connect(url, { useNewUrlParser: true }).then(client => {
-  // Create database: viatra_db
-  const db = client.db('viatra_db');
+  // Set app database: viatra_db
+  const db = client.db(db_name);
   
   // Create collections in the viatra_db database
-  const collectionInput = db.collection('inputs'); 
-  const collectionOutput = db.collection('outputs');
-
+  const collection_tracker = db.collection(collections.file_tracker)
   // Used to share the collections between routes
-  app.locals.collectionInput = collectionInput;
-  app.locals.collectionOutput = collectionOutput;
+  app.locals.collection_tracker = collection_tracker;
 
   // Listen on provided port, on all network interfaces.
   console.log('Listening on port ' + port)
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
+
 }).catch(error => console.error(error));
 
 /**
  * Normalize a port into a number, string, or false.
  */
-
 function normalizePort(val) {
   var port = parseInt(val, 10);
 
@@ -72,7 +70,6 @@ function normalizePort(val) {
 /**
  * Event listener for HTTP server "error" event.
  */
-
 function onError(error) {
   if (error.syscall !== 'listen') {
     throw error;
@@ -100,7 +97,6 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
-
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'
