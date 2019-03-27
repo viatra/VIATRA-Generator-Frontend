@@ -1,10 +1,8 @@
 const express = require('express');
-const child_process = require('child_process');
 const fs = require('fs');
 const multer = require('multer');
-
+const bodyParser = require('body-parser');
 const controller = require('../controllers/modelGeneration.js');
-const enums = require('../enums.js');
 const mongo = require('../db/mongo.js');
 
 const router = express.Router();
@@ -80,7 +78,8 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
           };
 
           mongo.insertData(req.app.locals.collection_tracker, payload);
-
+          // Download output file
+          res.download(output)
         }).catch(err => { throw err; });
       }).catch(err => { throw err; });
     }).catch(err => { throw err; });
@@ -92,52 +91,11 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
 });
 
 /**
- * ROUTE for fetching an output resource from mongo db
- * @query (string) logicalName
- * @query (string) file : file with extension
- */
-router.get('/fetch/output/resource', (req, res) => {
-  if (!req.query.logicalName) 
-    res.status(400).send({ message: 'Please provide {logicalName} query params' });
-
-  const query = {
-    logicalName: req.query.logicalName
-  }
-  mongo.findOne(req.app.locals.collectionOutput, query).then(result => {
-    const file = req.query.file;
-    if (file) {
-      const filePath = result.path + '/' + file;
-      if (fs.existsSync(filePath)) {
-        // download the file if found
-        res.download(filePath);
-      } else {
-        res.status(404).send(
-          'Specified file cannot be found on disk. Make sure to specify the full name of the file'
-        );
-      }
-    } else {
-      const zip = 'output.zip';
-      child_process.exec(`zip -r ${zip} ${result.path}`, { cwd: result.path }, (err) => {
-        if (err) throw err;
-        res.download(result.path + '/' + zip)
-      });
-    }
-    
-  }).catch(err => { res.status(404).send('Specified logical name cannot be found.') });
-});
-
-/**
  * ROUTE for fetching all .ecore files stored on the file system
  */
 router.get('/fetch-ecores', (req, res) => {
-  helpers.fetchInputFiles('/viatra-storage/inputs/').then(inputs => {
-    res.send(
-      inputs.filter(input => input.files.length > 0)
-      .map(input => ({
-        dir: `/viatra-storage/inputs/${input.dir}`,
-        files: input.files.filter(file => file.includes('.ecore'))[0]
-      }))
-    );
+  helpers.fetchInputFiles('/viatra-storage/domains/metamodels/').then(ecores => {
+    res.send(ecores);
   }).catch(err => res.status(404).send(err));
 })
 
@@ -146,13 +104,14 @@ router.get('/fetch-ecores', (req, res) => {
  * @query (string) id : unique id of directory
  */
 router.get('/fetch-config', (req, res) => {
-  if(!req.query.id) {
-    res.status(400).send({ error: '{id} query param not specified' });
+  if(!req.query.fileName) {
+    res.status(400).send({ error: '{fileName} query param not specified' });
   }
 
-  const fullpath = `/viatra-storage/inputs/${req.query.id}`;
+  const fullpath = '/viatra-storage/runs/configs/';
+  // Validate presence of file
   fs.readdir(fullpath, (err, files)=> {
-    const vsconfig = files.filter((file) => file.includes('.vsconfig'));
+    const vsconfig = files.filter((file) => file.includes(req.query.fileName));
     if(vsconfig.length === 0) {
       res.status(400).send({ 
         error: '.vsconfig file could not be found! Make sure you are passing the correct directory'
@@ -164,6 +123,37 @@ router.get('/fetch-config', (req, res) => {
       res.status(200).send(config);
     });
   });
-})
+});
 
+const jsonParser = bodyParser.json();
+router.put('/update-config', jsonParser, (req, res) => {
+  if(!req.query.fileName) {
+    res.status(400).send({ error: '{fileName} query param not specified' });
+  }
+
+  const original = `/viatra-storage/runs/configs/${fileName}`
+
+  copyVSConfigWithNewValues(original, req.body).then((copy, msg) => {
+    console.log(msg);
+
+    controller.generateModel(copy).then(output => {
+      const query = {
+        "0": {
+          config: original,
+        }
+      };
+  
+      const uid = helpers.generateUID();
+      const payload = {}
+      payload[uid] = {
+        config: copy,
+        output
+      }
+      mongo.setUpdate(req.app.locals.collection_tracker, query, payload);
+    });
+  });
+
+  
+})
+ 
 module.exports = router;

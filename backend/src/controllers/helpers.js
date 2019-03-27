@@ -29,12 +29,9 @@ const generateUID = () => {
  */
 const fetchInputFiles = (path) => {
     return new Promise((resolve, reject) =>
-        fs.readdir(path, (err, subDirs) => {
+        fs.readdir(path, (err, files) => {
             if(err) reject(err);
-            resolve(subDirs.map(subDir => ({
-                dir: subDir,
-                files: fs.readdirSync(`${path}/${subDir}`)
-            })))
+            resolve(files)
         })
     );
 };
@@ -166,41 +163,12 @@ const saveOutputToDisk = (initialPath) => {
 };
 
 /**
- * Function to build url for fetching output generated:
- * Either individual file (if provided)
- * Or complete directory
- * @param {string} dirPath 
- * @param {string} logicalName 
- */
-const buildOutputUrls = (dirPath, logicalName) => {
-    // 
-    const route = (file = null) => (
-        file 
-        ? `http://localhost:8000/fetch/output/resource?logicalName=${logicalName}&file=${file}`
-        : `http://localhost:8000/fetch/output/resource?logicalName=${logicalName}`
-    )
-        
-
-    return new Promise((resolve, reject) => {
-        fs.readdir(dirPath, (err, files) => {
-            if (err) reject(err);
-            const outputs = { allFiles: route() };
-
-            files.forEach(file => {
-                outputs[file] = route(file);
-            });
-
-            resolve(outputs);
-        })
-    });
-}
-
-/**
  * Function that will parse a given .vsconfig file and 
  * return the current (editable) values in it.
  * @param {object} rd : The reader object used to read lines of file
+ * @param {object} updateValues : the new values if a config file is to be updated
  */
-const parseVSConfig = (rd) => {
+const parseVSConfig = (rd, updateValues = null) => {
     // Config values that will be returned to the user
     const config = {
         epackage: undefined,
@@ -221,28 +189,56 @@ const parseVSConfig = (rd) => {
     }
 
     return new Promise((resolve, reject) => {
+        const updatedFile = ''
+
         // Will match each line to the values of the config file that
         // will be sent to the user, and update the config variable
         // accordingly.
-        rd.on('line', (line) => {
-            if (line.includes(targetIdentifier.epackage)) 
-                config.epackage = line.slice(line.indexOf('"') + 1, line.length - 1);
-
-            else if (line.includes(targetIdentifier.vql))
-                config.vql = line.slice(line.indexOf('"') + 1, line.length - 1);
-
-            else if (line.includes(targetIdentifier.node))
-                config.scope.node = line.slice(line.indexOf('=') + 1, line.length).trim();
-
-            else if (line.includes(targetIdentifier.number))
-                config.number = line.slice(line.indexOf('=') + 1, line.length).trim();
-
-            else if (line.includes(targetIdentifier.runs))
-                config.runs = line.slice(line.indexOf('=') + 1, line.length).trim();
-        });
+        if (!updateValues) {
+            rd.on('line', (line) => {
+                if (line.includes(targetIdentifier.epackage))
+                    config.epackage = line.slice(line.indexOf('"') + 1, line.length - 1);
+                else if (line.includes(targetIdentifier.vql)) 
+                    config.vql = line.slice(line.indexOf('"') + 1, line.length - 1);
+                else if (line.includes(targetIdentifier.node))
+                    config.scope.node = line.slice(line.indexOf('=') + 1, line.length).trim();
+            
+                else if (line.includes(targetIdentifier.number)) 
+                    config.number = line.slice(line.indexOf('=') + 1, line.length).trim();
+                    
+                else if (line.includes(targetIdentifier.runs)) 
+                    config.runs = line.slice(line.indexOf('=') + 1, line.length).trim();
+            });
+        } else {
+            rd.on('line', (line) => {
+                if (line.includes(targetIdentifier.epackage)){
+                    config.epackage = line.slice(line.indexOf('"') + 1, line.length - 1);
+                    updatedFile += line.replace(config.epackage, updateValues.epackage)
+                }
+                else if (line.includes(targetIdentifier.vql)) {
+                    config.vql = line.slice(line.indexOf('"') + 1, line.length - 1);
+                    updatedFile += line.replace(config.vql, updateValues.vql)
+                } 
+                else if (line.includes(targetIdentifier.node)) {
+                    config.scope.node = line.slice(line.indexOf('=') + 1, line.length).trim();
+                    updatedFile += line.replace(config.scope.node, updateValues.scope.node)
+                }
+                else if (line.includes(targetIdentifier.number)) {
+                    config.number = line.slice(line.indexOf('=') + 1, line.length).trim();
+                    updatedFile += line.replace(config.number, updateValues.number)
+                }
+                else if (line.includes(targetIdentifier.runs)) {
+                    config.runs = line.slice(line.indexOf('=') + 1, line.length).trim();
+                    updatedFile += line.replace(config.runs, updateValues.runs)
+                }
+                else {
+                    updatedFile += line
+                }
+            });
+        }
 
         // We finished parsing the file, we can now send the result back
-        rd.on('close', () => resolve(config));
+        rd.on('close', () => updateValues ? resolve(config, updatedFile) : resolve(config));
     });
 }
 
@@ -265,6 +261,29 @@ const readAndExtractVSConfig = (path) => {
     });  
 };
 
+/**
+ * Creates a copy of the original vsconfig 
+ * and returns the new file
+ * 
+ * @param {string} vsconfig 
+ * @param {object} updatedValues 
+ * 
+ * @returns {Promise} new Promise(copy, message)
+ */
+const copyVSConfigWithNewValues = (vsconfig, updatedValues) => {
+    const uid = generateUID();
+    const copy = vsconfig.replace('.vsconfig', `${uid}.vsconfig`);
+
+    return new Promise((resolve, reject) => {
+        fs.writeFile(copy, updatedValues, (err) => {
+            if (err) reject(err);
+
+            resolve(copy, 'Successfully wrote updated values to copy')
+        })
+            
+    });
+}
+
 
 module.exports = {
     generateUID,
@@ -273,8 +292,8 @@ module.exports = {
     searchAndReplaceFiles,
     fetchNsURIFromMetaModel,
     saveOutputToDisk,
-    buildOutputUrls,
 
     parseVSConfig,
     readAndExtractVSConfig,
+    copyVSConfigWithNewValues
 }

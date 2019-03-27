@@ -1,3 +1,7 @@
+const setUpdate = (collection, query, payload) => {
+    collection.update(query, { $set: { payload } })
+}
+
 /**
  * Insert specified payload into the specified collection in the database
  * 
@@ -32,6 +36,7 @@ const findAll = (collection, query = null) => {
 }
 
 module.exports = {
+    setUpdate,
     insertData,
     findOne,
     findAll
