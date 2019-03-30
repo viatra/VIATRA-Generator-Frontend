@@ -42,7 +42,9 @@ class Home extends Component {
     generateModel = () => {
         const { files } = this.state;
         const formData = new FormData();
-        formData.append('generator_inputs', [...files]);
+        Array.from(files).forEach(file => {
+            formData.append('generator_inputs', file)
+        });
         const config = {
             headers: {
                 'content-type': 'application/x-www-form-urlencoded' 
