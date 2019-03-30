@@ -36,8 +36,6 @@ router.get('/', function(req, res, next) {
  * @query (string) logicalName
  */
 router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) => {
-  if(fs.existsSync())
-
   // Validate POST body is not empty
   if (!req.files || req.files.length === 0) {
     res.status(400).send({ message: 'Files expected at {generator_inputs} field!' });
@@ -46,6 +44,8 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
     res.status(400).send({ message: `Unexpected number of files ${req.files.length}, expected 4!` });
     return;
   }
+
+  console.log(req.files); 
 
   // Save the input files under correct directories
   helpers.saveInputFilesToDirs(req.files).then(newPaths => {
@@ -71,10 +71,9 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
             logicalName: nsURI,
             metamodel,
             constraint,
-            "0": {
-              config,
-              output
-            }
+            runs: [
+              { config, output }
+            ]
           };
 
           mongo.insertData(req.app.locals.collection_tracker, payload);
@@ -93,10 +92,28 @@ router.post('/generate-model', upload.array('generator_inputs', 4), (req, res) =
 /**
  * ROUTE for fetching all .ecore files stored on the file system
  */
-router.get('/fetch-ecores', (req, res) => {
-  helpers.fetchInputFiles('/viatra-storage/domains/metamodels/').then(ecores => {
-    res.send(ecores);
-  }).catch(err => res.status(404).send(err));
+router.get('/fetch-runs', (req, res) => {
+  mongo.findAll(req.app.locals.collection_tracker).then(results => {
+    // Parse data
+    const parsed = results.map(result => {
+      const regex = /[\w-]+\.[a-z]*/;
+      const copy = { ...result };
+
+      copy.constraint = result.constraint.match(regex)[0];
+      copy.metamodel = result.metamodel.match(regex)[0];
+      copy.runs = result.runs.map(el => {
+        return {
+          config: el.config.match(regex)[0],
+          output: el.output.match(regex)[0]
+        }
+      })
+
+      return copy;
+    })
+    
+
+    res.status(200).send({ results: parsed });
+  })
 })
 
 /**
@@ -127,33 +144,41 @@ router.get('/fetch-config', (req, res) => {
 
 const jsonParser = bodyParser.json();
 router.put('/update-config', jsonParser, (req, res) => {
-  if(!req.query.fileName) {
-    res.status(400).send({ error: '{fileName} query param not specified' });
+  if(!req.query.config || !req.query.logicalName) {
+    res.status(400).send({ error: '{config, logicalName} query params not specified' });
   }
 
-  const original = `/viatra-storage/runs/configs/${fileName}`
+  const { config, logicalName } = req.query;
+  const originalConfig = `/viatra-storage/runs/configs/${config}`;
 
-  copyVSConfigWithNewValues(original, req.body).then((copy, msg) => {
-    console.log(msg);
+  helpers.copyVSConfigWithNewValues(originalConfig, req.body).then(copy => {
+    console.log('Created copy, generating output.', copy);
 
     controller.generateModel(copy).then(output => {
+      console.log('New ouput generated, updating mongo document with new run...')
       const query = {
-        "0": {
-          config: original,
-        }
+        logicalName
       };
   
-      const uid = helpers.generateUID();
-      const payload = {}
-      payload[uid] = {
+      const payload = {
         config: copy,
         output
-      }
-      mongo.setUpdate(req.app.locals.collection_tracker, query, payload);
-    });
-  });
+      };
 
-  
+      mongo.setUpdate(req.app.locals.collection_tracker, query, { runs: payload });
+      res.status(200).download(output);
+    });
+  }).catch(err => {
+    console.log(err);
+  });
 })
+
+router.get('/download-output', (req, res) => {
+  if(!req.query.output) {
+    res.status(400).send({ error: 'No output query param specified'});
+  }
+    
+  res.download(`/viatra-storage/runs/outputs/${req.query.output}`);
+});
  
 module.exports = router;

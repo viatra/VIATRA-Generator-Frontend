@@ -1,11 +1,11 @@
 const setUpdate = (collection, query, payload) => {
-    collection.update(query, { $set: { payload } })
+    collection.update(query, { $push: payload })
 }
 
 /**
  * Insert specified payload into the specified collection in the database
  * 
- * @param {object} collection 
+ * @param {object} collection
  * @param {object} payload 
  * @returns new Promise()
  */
@@ -35,7 +35,7 @@ const findAll = (collection, query = null) => {
     return collection.find(query).toArray();
 }
 
-module.exports = {
+module.exports = { 
     setUpdate,
     insertData,
     findOne,

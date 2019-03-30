@@ -189,7 +189,7 @@ const parseVSConfig = (rd, updateValues = null) => {
     }
 
     return new Promise((resolve, reject) => {
-        const updatedFile = ''
+        let updatedFile = ''
 
         // Will match each line to the values of the config file that
         // will be sent to the user, and update the config variable
@@ -234,11 +234,13 @@ const parseVSConfig = (rd, updateValues = null) => {
                 else {
                     updatedFile += line
                 }
+
+                updatedFile += "\n"
             });
         }
 
         // We finished parsing the file, we can now send the result back
-        rd.on('close', () => updateValues ? resolve(config, updatedFile) : resolve(config));
+        rd.on('close', () => updateValues ? resolve(updatedFile) : resolve(config));
     });
 }
 
@@ -271,15 +273,22 @@ const readAndExtractVSConfig = (path) => {
  * @returns {Promise} new Promise(copy, message)
  */
 const copyVSConfigWithNewValues = (vsconfig, updatedValues) => {
-    const uid = generateUID();
-    const copy = vsconfig.replace('.vsconfig', `${uid}.vsconfig`);
-
+    
     return new Promise((resolve, reject) => {
-        fs.writeFile(copy, updatedValues, (err) => {
-            if (err) reject(err);
+        const rd = readline.createInterface({
+            input: fs.createReadStream(vsconfig),
+            console: false
+        });
 
-            resolve(copy, 'Successfully wrote updated values to copy')
-        })
+        parseVSConfig(rd, updatedValues).then((updatedFile) => {
+            const uid = generateUID();
+            const copy = vsconfig.replace('.vsconfig', `${uid}.vsconfig`);
+            fs.writeFile(copy, updatedFile, (err) => {
+                if (err) reject(err);
+                resolve(copy);
+            });
+        }).catch(reject)
+        
             
     });
 }
