@@ -21,6 +21,14 @@ body {
   margin: 25px 0;
 }
 
+input[type="text"] {
+  font-size: 14px;
+}
+
+label {
+  font-size: 14px !important;
+}
+
 .title {
   font-size: 48px;
   text-align: center;

@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Button,
   Paper, 
   Table, 
   TableBody, 
@@ -27,7 +26,14 @@ import {
   }
  });
 
-const ViatraTable = ({ classes }) => {
+const ViatraTable = ({ 
+  history,
+  classes, 
+  data, 
+  selectedValues, 
+  handleSelectChange, 
+  handleDownload 
+}) => {
 
   const styles = {
     table: {
@@ -46,44 +52,63 @@ const ViatraTable = ({ classes }) => {
   }
 
   const renderDataRow = (data) => {
-    return data.map(el => (
-      <TableRow>
-        <TableCell style={styles.tableBody} align="center">
-          Model 1
-        </TableCell>
+    return data.map((run, index) => {
+      const currentConfig = run.runs[selectedValues[index]].config;
+      const currentOutput = run.runs[selectedValues[index]].output;
 
-        <TableCell style={styles.tableBody} align="center">
-          <div style={{ display: 'flex' }}>
-            <FormControl className={classes.select} variant="outlined">
-              <Select
-                className={classes.selectItem}
-                value={8}
-                input={<OutlinedInput name="config" />}
-                autoWidth
+      return (
+        <TableRow key={index}>
+          <TableCell style={styles.tableBody} align="center">
+            {run.metamodel}
+          </TableCell>
+  
+          <TableCell style={styles.tableBody} align="center">
+            <div style={{ display: 'flex' }}>
+              <FormControl className={classes.select} variant="outlined">
+                <Select
+                  onChange={e => handleSelectChange(index, e)}
+                  className={classes.selectItem}
+                  value={selectedValues[index]}
+                  input={<OutlinedInput labelWidth={0} name="config" />}
+                  autoWidth
+                >
+                  {run.runs.map((el, index) => {
+                    return <MenuItem key={index} className={classes.selectItem} value={index}>
+                      {el.config}
+                    </MenuItem>
+                  })}
+                </Select>
+              </FormControl>
+              <Tooltip title={<p style={{ fontSize: 12, marginTop: 6 }}>Edit Config File</p>}>
+                <IconButton
+                  onClick={() => 
+                    history.push(`/edit/${currentConfig}`, { logicalName: run.logicalName })
+                  }
+                  style={{ margin: 'auto 4px', transform: 'scale(0.9)' }}
+                >
+                  <Edit />
+                </IconButton>
+              </Tooltip>
+            </div>
+          </TableCell>
+  
+          <TableCell style={styles.tableBody} align="center">
+            {currentOutput}
+             &nbsp; <ArrowForward style={{ paddingTop: 12 }} />
+             &nbsp; {currentConfig} <br/>
+            <Tooltip title={<p style={{ fontSize: 12, marginTop: 6 }}>Download Output</p>}>
+              <IconButton 
+                onClick={() => handleDownload(currentOutput)} 
+                style={{ transform: 'scale(0.93)', marginTop: 8 }} 
+                variant="flat"
               >
-                <MenuItem className={classes.selectItem} value={8}>generation.vsconfig</MenuItem>
-                <MenuItem className={classes.selectItem} value={20}>config.vsconfig</MenuItem>
-                <MenuItem className={classes.selectItem} value={30}>bloom_model.vsconfig</MenuItem>
-              </Select>
-            </FormControl>
-            <Tooltip title={<p style={{ fontSize: 12, marginTop: 6 }}>Edit Config File</p>}>
-              <IconButton style={{ margin: 'auto 4px', transform: 'scale(0.9)' }}>
-                <Edit />
+                <CloudDownload />
               </IconButton>
             </Tooltip>
-          </div>
-        </TableCell>
-
-        <TableCell style={styles.tableBody} align="center">
-          output.xmi &nbsp; <ArrowForward style={{ paddingTop: 12 }} /> &nbsp; generation.vsconfig <br/>
-          <Tooltip title={<p style={{ fontSize: 12, marginTop: 6 }}>Download Output</p>}>
-            <IconButton style={{ transform: 'scale(0.93)', marginTop: 8 }} variant="flat">
-              <CloudDownload />
-            </IconButton>
-          </Tooltip>
-        </TableCell>
-      </TableRow>
-    ));
+          </TableCell>
+        </TableRow>
+      )
+    });
   }
     
   return (
@@ -97,7 +122,7 @@ const ViatraTable = ({ classes }) => {
         </TableRow>
       </TableHead>
       <TableBody>
-          {renderDataRow([1, 2, 3, 4, 5])}
+          {renderDataRow(data)}
       </TableBody>
     </Table>
     </Paper>
