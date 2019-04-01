@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import axios from 'axios';
 import fileDownload from 'js-file-download';
 import { TextField, Button } from '@material-ui/core';
+import { fetchConfig, updateConfig } from '../api/api.js';
 
 import Loader from './Loader.js';
 
@@ -22,12 +22,13 @@ class Edit extends Component {
 
     componentDidMount() {
         const { match } = this.props;
-        axios.get(`http://localhost:8000/fetch-config?fileName=${match.params.config}`).then(res => {
-            console.log(res.data);
+
+        fetchConfig(match.params.config).then(data => {
+            console.log(data);
             this.setState({
-                configData: res.data
+                configData: data
             });
-        })
+        });
     }
 
     handleInputChange = (input, value) => {
@@ -55,14 +56,11 @@ class Edit extends Component {
         const config = match.params.config;
         const logicalName = location.state.logicalName;
 
-        const url = `http://localhost:8000/update-config?config=${config}&logicalName=${logicalName}`;
-
-
         this.setState({
             isLoading: true
         }, () => {
-            axios.put(url, this.state.configData).then(res => {
-                fileDownload(res.data, 'new_output.xmi');
+            updateConfig(config, logicalName, this.state.configData).then(data => {
+                fileDownload(data, 'new_output.xmi');
                 alert('Output successfully generated with new config! Download complete');
 
                 this.setState({

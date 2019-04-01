@@ -4,6 +4,7 @@ import { Button } from '@material-ui/core';
 import { Add } from '@material-ui/icons';
 import fileDownload from 'js-file-download';
 import { mockData } from '../api/mock.js';
+import { fetchRuns, generateModel } from '../api/api.js';
 
 import Table from './Table.js';
 import Loader from './Loader.js';
@@ -17,12 +18,12 @@ class Home extends Component {
     }
 
     componentDidMount() {
-        axios.get('http://localhost:8000/fetch-runs').then(res => {
-            if(res.data.length === 0) {
+        fetchRuns().then(data => {
+            if(data.length === 0) {
                 return;
             }
 
-            const fullData = [...res.data.results, ...mockData]
+            const fullData = [...data.results, ...mockData]
             const selected = fullData.map(() => 0);
 
             this.setState({
@@ -57,8 +58,8 @@ class Home extends Component {
             this.setState({
                 isLoading: true
             }, () => {
-                axios.post('http://localhost:8000/generate-model', formData, config).then(res => {
-                    fileDownload(res.data, 'model_generated.xmi');
+                generateModel(formData, config).then(data => {
+                    fileDownload(data, 'model_generated.xmi');
                     alert('File successfully downloaded');
                     this.setState({ isLoading: false });
                 });
