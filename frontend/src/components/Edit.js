@@ -117,7 +117,12 @@ class Edit extends Component {
                 <h1 style={{ textAlign: 'center', margin: '25px auto' }}>Edit Config File</h1>
     
                 {isLoading 
-                    ? <Loader /> 
+                    ? <div>
+                        <Loader />
+                        <p style={{ fontSize: 14, textAlign: 'center', color: 'gray' }}>
+                            This may take a while... (1 - 2 mins)
+                        </p>
+                    </div>
                     : <div style={{ width: '45%', margin: '18px auto' }}>
                     <TextField 
                         fullWidth 
