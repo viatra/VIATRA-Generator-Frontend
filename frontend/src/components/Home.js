@@ -87,14 +87,21 @@ class Home extends Component {
 
     render() {
         const styles = {
+            container: { 
+                width: '35%', 
+                padding: 18,
+                margin: '8px auto', 
+                background: '#9c27b0',
+                borderRadius: 8
+            },
             generateModel: {
-                backgroundColor: '#9c27b0',
+                backgroundColor: 'white',
                 width: 150,
                 height: 60,
-                color: 'white',
+                color: 'black',
                 fontSize: 14,
                 borderRadius: 200,
-                margin: '15px auto'
+                margin: '25px auto 8px'
             },
             previousRuns: {
                 margin: '55px auto 0'
@@ -129,15 +136,25 @@ class Home extends Component {
                     Graph Generator as a Service
                 </h1>
                 {isLoading 
-                    ? <Loader /> 
-                    : <div>
+                    ? <div>
+                        <Loader />
+                        <p style={{ fontSize: 14, textAlign: 'center', color: 'gray' }}>
+                            This may take a while... (1 - 2 mins)
+                        </p>
+                    </div>
+                    : <div style={styles.container}>
                         <div style={{display: 'flex', justifyContent: 'center'}}>
-                            <input name="generator_inputs" onChange={this.selectFiles} type="file" multiple />
+                            <input 
+                                name="generator_inputs" 
+                                onChange={this.selectFiles} 
+                                type="file" 
+                                multiple 
+                            />
                         </div>
                         <div style={{display: 'flex', justifyContent: 'center'}}>
                             <Button 
                                 onClick={this.generateModel} 
-                                variant="contained" 
+                                variant="flat" 
                                 style={styles.generateModel}
                             >
                                 <Add/> &nbsp;
@@ -145,8 +162,7 @@ class Home extends Component {
                             </Button>
                         </div>
                     </div>
-                }
-                
+                } 
 
                 <div style={styles.previousRuns}>
                     <h2 style={{ marginLeft: '15%' }} >Previous runs</h2>
