@@ -25,6 +25,19 @@ input[type="text"] {
   font-size: 14px;
 }
 
+input[type="file"] {
+  width: 185px;
+  cursor: pointer;
+  transform: scale(1.1);
+  transition: all 0.35s ease;
+}
+
+input[type="file"]:hover {
+  width: 85px;
+  transform: scale(1.5);
+}
+
+
 label {
   font-size: 14px !important;
 }
