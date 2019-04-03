@@ -29,7 +29,7 @@ input[type="file"] {
   width: 185px;
   cursor: pointer;
   transform: scale(1.1);
-  transition: all 0.35s ease;
+  transition: all 0.3s ease;
 }
 
 input[type="file"]:hover {

@@ -88,11 +88,10 @@ class Home extends Component {
     render() {
         const styles = {
             container: { 
-                width: '35%', 
+                width: '35%',
                 padding: 18,
                 margin: '8px auto', 
-                background: '#9c27b0',
-                borderRadius: 8
+                background: 'white',
             },
             generateModel: {
                 backgroundColor: 'white',
@@ -114,7 +113,7 @@ class Home extends Component {
                 position: 'fixed',
                 bottom: '-15vw',
                 right: '-15vw',
-                backgroundColor: '#9c27b0',
+                backgroundColor: '#00897b',
                 borderRadius: '50%'
             },
             circle2: {
@@ -124,7 +123,7 @@ class Home extends Component {
                 position: 'fixed',
                 top: '15vw',
                 left: '-8vw',
-                backgroundColor: '#9c27b0',
+                backgroundColor: '#00897b',
                 borderRadius: '50%'
             }
         }

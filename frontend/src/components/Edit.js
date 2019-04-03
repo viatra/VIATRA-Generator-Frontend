@@ -83,7 +83,7 @@ class Edit extends Component {
                 height: 75,
                 margin: '12px auto',
                 fontSize: 16,
-                backgroundColor: '#9c27b0',
+                backgroundColor: '#00897b',
                 color: 'white',
                 borderRadius: 200
             },
@@ -94,7 +94,7 @@ class Edit extends Component {
                 position: 'fixed',
                 left: '-20vw',
                 bottom: '-20vw',
-                backgroundColor: '#9c27b0',
+                backgroundColor: '#00897b',
                 borderRadius: '50%'
             },
             circle2: {
@@ -104,7 +104,7 @@ class Edit extends Component {
                 position: 'fixed',
                 top: '-16vw',
                 right: '-16vw',
-                backgroundColor: '#9c27b0',
+                backgroundColor: '#00897b',
                 borderRadius: '50%'
             }
         }
