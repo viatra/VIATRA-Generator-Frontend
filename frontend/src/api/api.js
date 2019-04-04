@@ -2,9 +2,10 @@ import { get, post, put } from 'axios';
 
 const config = {
     _protocol: 'http://',
-    _host: 'localhost:8000'
+    _dns: 'ec2-3-16-24-192.us-east-2.compute.amazonaws.com',
+    _port: ':8000'
 };
-const url = `${config._protocol}${config._host}`;
+const url = `${config._protocol}${config._dns}${config._port}`;
 
 export const fetchRuns = () => {
     return new Promise((resolve, reject) => {
