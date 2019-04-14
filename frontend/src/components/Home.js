@@ -4,7 +4,7 @@ import { Button } from '@material-ui/core';
 import { Add } from '@material-ui/icons';
 import fileDownload from 'js-file-download';
 import { mockData } from '../api/mock.js';
-import { fetchRuns, generateModel } from '../api/api.js';
+import { fetchRuns, generateModel, downloadOutput } from '../api/api.js';
 
 import Table from './Table.js';
 import Loader from './Loader.js';
@@ -77,8 +77,8 @@ class Home extends Component {
     }
 
     handleDownloadRunOutput = (file) => {
-        axios.get(`http://localhost:8000/download-output?output=${file}`).then(res => {
-            fileDownload(res.data, file);
+        downloadOutput(file).then(data => {
+            fileDownload(data, file);
             alert('Download complete!');
         });
     }

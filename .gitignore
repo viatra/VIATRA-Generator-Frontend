@@ -1,2 +1,4 @@
 node_modules/
 .idea/
+awscli-bundle
+.DS_Store

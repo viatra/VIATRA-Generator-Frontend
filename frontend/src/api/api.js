@@ -39,3 +39,11 @@ export const updateConfig = (config, logicalName, data) => {
         }).catch(reject);
     });
 }
+
+export const downloadOutput = (file) => {
+    return new Promise((resolve, reject) => {
+        get(url + `/download-output?output=${file}`).then(res => {
+            resolve(res.data);
+        }).catch(reject);
+    });
+};
