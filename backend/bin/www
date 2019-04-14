@@ -32,11 +32,12 @@ const url = "mongodb://localhost:" + db_port;
  * Connects to the mongo database
  */
 MongoClient.connect(url, { useNewUrlParser: true }).then(client => {
+  console.log(client.topology.isConnected());
   // Set app database: viatra_db
   const db = client.db(db_name);
   
   // Create collections in the viatra_db database
-  const collection_tracker = db.collection(collections.file_tracker)
+  const collection_tracker = db.collection(collections.file_tracker);
   // Used to share the collections between routes
   app.locals.collection_tracker = collection_tracker;
 
