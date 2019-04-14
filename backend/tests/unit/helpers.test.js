@@ -1,19 +1,21 @@
-const { generateUID } = require('../../src/controllers/helpers.js');
+const fs = require('fs');
 const { MongoClient } = require('mongodb');
+const rimraf = require('rimraf');
+
+const { 
+    generateUID,
+    fetchInputFiles
+} = require('../../src/controllers/helpers.js');
 
 let connection;
-let db;
-
 beforeAll(async () => {
-    console.log(global.__MONGO_URI__);
     connection = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true });
-    // db = await connection.db(global.__MONGO_DB_NAME__);
+    db = await connection.db(global.__MONGO_DB_NAME__);
 });
 
-// afterAll(async () => {
-//     await connection.close();
-//     await db.close();
-// });
+afterAll(async () => {
+    await connection.close();
+});
 
 test('generateUID does not create duplicates', () => {
     const uids = new Array(10).fill(0).map(() => {
@@ -26,24 +28,29 @@ test('generateUID does not create duplicates', () => {
     });
 });
 
-// test('', async () => {
-//     const files = db.collection('runs');
+test('fetchInputFiles fetches all file names in given path', async () => {
+    console.log(__dirname)
+    // /Users/rawadkaram/WebstormProjects/VIATRA-Generator-Frontend/backend/tests/unit
+    const testDir = __dirname + "/mock_files";
+    if(!fs.existsSync(testDir)) {
+        fs.mkdirSync(testDir);
+    }
+   
+    const testFiles = [
+        testDir + '/file1.txt',
+        testDir + '/file2.txt',
+        testDir + '/file3.txt',
+    ]
 
-//     await files.insertMany([
-//         {type: 'Document'},
-//         {type: 'Video'},
-//         {type: 'Image'},
-//         {type: 'Document'},
-//         {type: 'Image'},
-//         {type: 'Document'},
-//     ]);
+    testFiles.map(testFile => {
+        return fs.writeFile(testFile, '');
+    });
 
-//     const topFiles = await files.find({}).toArray();
-
-//     expect(topFiles).toEqual([
-//         {_id: 'Document', count: 3},
-//         {_id: 'Image', count: 2},
-//         {_id: 'Video', count: 1},
-//     ]);
-// });
+    Promise.all(testFiles).then(() => {
+        fetchInputFiles(testDir).then(files => {
+            expect(files.length).toBe(testFiles.length)
+        });
+        rimraf.sync(testDir);
+    });
+});
 

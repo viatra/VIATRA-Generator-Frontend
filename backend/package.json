@@ -2,6 +2,11 @@
   "name": "backend",
   "version": "0.1.0",
   "private": true,
+  "jest": {
+    "globalSetup": "./tests/setup.js",
+    "globalTeardown": "./tests/teardown.js",
+    "testEnvironment": "./tests/mongo-environment.js"
+  },
   "scripts": {
     "test": "jest",
     "start": "nodemon ./bin/www"
@@ -16,7 +21,8 @@
     "http-errors": "~1.6.2",
     "mongodb": "^3.1.8",
     "morgan": "~1.9.0",
-    "multer": "^1.4.1"
+    "multer": "^1.4.1",
+    "rimraf": "^2.6.3"
   },
   "devDependencies": {
     "jest": "^24.7.1",
