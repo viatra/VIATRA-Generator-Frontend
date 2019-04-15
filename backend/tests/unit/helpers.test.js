@@ -53,6 +53,8 @@ describe('file related tests', () => {
         }
     
         testFiles.map(testFile => {
+            if(testFile.includes('.ecore')) 
+                return fs.writeFile(testFile, 'nsURI="some.ns.uri.fetched"')
             return fs.writeFile(testFile, 'some text');
         });
 
@@ -77,6 +79,13 @@ describe('file related tests', () => {
                 done();
             });
             
+        })
+    });
+
+    test('fetchNsURIFromMetaModel:: fetches the content of nsURI flag', done => {
+        const expectedNsURI = 'some.ns.uri.fetched';
+        return fetchNsURIFromMetaModel(testFiles[0]).then(trimmed => {
+            expect(trimmed).toBe(expectedNsURI);
         })
     });
 });
