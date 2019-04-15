@@ -38,30 +38,39 @@ test('generateUID:: does not create duplicates', () => {
     });
 });
 
-test('fetchInputFiles:: fetches all file names in given path', async () => {
-    // /Users/rawadkaram/WebstormProjects/VIATRA-Generator-Frontend/backend/tests/unit
+describe('file related tests', () => {
     const testDir = __dirname + "/mock_files";
-    if(!fs.existsSync(testDir)) {
-        fs.mkdirSync(testDir);
-    }
-   
     const testFiles = [
-        testDir + '/file1.txt',
-        testDir + '/file2.txt',
-        testDir + '/file3.txt',
+        testDir + '/file1.ecore',
+        testDir + '/file2.vql',
+        testDir + '/file3.xmi',
+        testDir + '/file3.vsconfig'
     ]
 
-    testFiles.map(testFile => {
-        return fs.writeFile(testFile, '');
+    beforeAll(() => {
+        if(!fs.existsSync(testDir)) {
+            fs.mkdirSync(testDir);
+        }
+    
+        testFiles.map(testFile => {
+            return fs.writeFile(testFile, '');
+        });
+
+        return Promise.all(testFiles);
     });
 
-    return Promise.all(testFiles).then(() => {
-        expect(fetchInputFiles(testDir)).resolves.toHaveLength(testFiles.length);
+    afterAll(() => {
         rimraf.sync(testDir);
     });
+
+    test('fetchInputFiles:: fetches all file names in given path', async () => {        
+        expect(fetchInputFiles(testDir))
+            .resolves
+            .toHaveLength(testFiles.length);
+    });
+    
+    // test('saveInputFilesToDirs:: saves the input files to the correct directories', () => {
+    //     saveInputFilesToDirs
+    // });
 });
-
-test('saveInputFilesToDirs:: saves the input files to the correct directories', () => {
-
-})
 
