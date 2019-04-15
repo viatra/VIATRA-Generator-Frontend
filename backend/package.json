@@ -8,7 +8,7 @@
     "testEnvironment": "./tests/mongo-environment.js"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "start": "nodemon ./bin/www"
   },
   "dependencies": {

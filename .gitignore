@@ -1,4 +1,5 @@
 node_modules/
 .idea/
+backend/coverage
 awscli-bundle
 .DS_Store
