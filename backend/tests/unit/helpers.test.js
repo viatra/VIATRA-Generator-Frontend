@@ -70,7 +70,7 @@ describe('file related tests', () => {
     });
     
     test('searchAndReplaceFiles:: saves the input files to the correct directories', done => {
-        return searchAndReplaceFiles(testFiles[0], ['some'], ['this']).then(data => {
+        return searchAndReplaceFiles(testFiles[0], ['some'], ['this']).then(() => {
             fs.readFile(testFiles[0], 'utf8', (err, data) => {
                 if (err) return;
                 expect(data).toMatch('this');
