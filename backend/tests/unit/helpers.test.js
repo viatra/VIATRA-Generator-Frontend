@@ -8,14 +8,23 @@ const {
 } = require('../../src/controllers/helpers.js');
 
 let connection;
-beforeAll(async () => {
-    connection = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true });
-    db = await connection.db(global.__MONGO_DB_NAME__);
-});
 
-afterAll(async () => {
-    await connection.close();
-});
+/**
+ * Tests for the helpers.js file
+ * This file contains functions meant
+ * to manipulate files.
+ */
+
+// __ THIS IS FOR FUNCTIONS THAT NEED ACCESS TO THE DATABASE
+// NOT APPLICABLE HERE
+// beforeAll(async () => {
+//     connection = await MongoClient.connect(global.__MONGO_URI__, { useNewUrlParser: true });
+//     db = await connection.db(global.__MONGO_DB_NAME__);
+// });
+
+// afterAll(async () => {
+//     await connection.close();
+// });
 
 test('generateUID does not create duplicates', () => {
     const uids = new Array(10).fill(0).map(() => {
