@@ -235,7 +235,7 @@ const parseVSConfig = (rd, updateValues = null) => {
                     updatedFile += line
                 }
 
-                updatedFile += "\n"
+                updatedFile += "\n";
             });
         }
 
@@ -287,9 +287,7 @@ const copyVSConfigWithNewValues = (vsconfig, updatedValues) => {
                 if (err) reject(err);
                 resolve(copy);
             });
-        }).catch(reject)
-        
-            
+        }).catch(reject) 
     });
 }
 

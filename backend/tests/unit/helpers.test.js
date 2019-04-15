@@ -78,16 +78,17 @@ describe('file related tests', () => {
                 if (err) return;
                 expect(data).toMatch('this');
                 done();
-            });
-            
-        })
+            }); 
+        });
     });
 
     test('fetchNsURIFromMetaModel:: fetches the content of nsURI flag', () => {
         const expectedNsURI = 'ns.uri.fetched';
         return fetchNsURIFromMetaModel(testFiles[0]).then(trimmed => {
             expect(trimmed).toBe(expectedNsURI);
-        })
+        });
     });
+
+    
 });
 
