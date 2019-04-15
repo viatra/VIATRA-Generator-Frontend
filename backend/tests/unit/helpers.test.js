@@ -1,10 +1,11 @@
 const fs = require('fs');
-const { MongoClient } = require('mongodb');
+// const { MongoClient } = require('mongodb');
 const rimraf = require('rimraf');
 
 const { 
     generateUID,
-    fetchInputFiles
+    fetchInputFiles,
+    saveInputFilesToDirs
 } = require('../../src/controllers/helpers.js');
 
 // let connection;
@@ -26,7 +27,7 @@ const {
 //     await connection.close();
 // });
 
-test('generateUID does not create duplicates', () => {
+test('generateUID:: does not create duplicates', () => {
     const uids = new Array(10).fill(0).map(() => {
         return generateUID();
     });
@@ -37,8 +38,7 @@ test('generateUID does not create duplicates', () => {
     });
 });
 
-test('fetchInputFiles fetches all file names in given path', async () => {
-    console.log(__dirname)
+test('fetchInputFiles:: fetches all file names in given path', async () => {
     // /Users/rawadkaram/WebstormProjects/VIATRA-Generator-Frontend/backend/tests/unit
     const testDir = __dirname + "/mock_files";
     if(!fs.existsSync(testDir)) {
@@ -55,11 +55,13 @@ test('fetchInputFiles fetches all file names in given path', async () => {
         return fs.writeFile(testFile, '');
     });
 
-    Promise.all(testFiles).then(() => {
-        fetchInputFiles(testDir).then(files => {
-            expect(files.length).toBe(testFiles.length)
-        });
+    return Promise.all(testFiles).then(() => {
+        expect(fetchInputFiles(testDir)).resolves.toHaveLength(testFiles.length);
         rimraf.sync(testDir);
     });
 });
+
+test('saveInputFilesToDirs:: saves the input files to the correct directories', () => {
+
+})
 
