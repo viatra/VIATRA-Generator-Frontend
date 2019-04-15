@@ -7,7 +7,7 @@ const {
     fetchInputFiles
 } = require('../../src/controllers/helpers.js');
 
-let connection;
+// let connection;
 
 /**
  * Tests for the helpers.js file
