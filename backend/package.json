@@ -8,8 +8,9 @@
     "testEnvironment": "./tests/mongo-environment.js"
   },
   "scripts": {
-    "test": "jest --coverage",
-    "start": "nodemon ./bin/www"
+    "test": "jest",
+    "start": "nodemon ./bin/www",
+    "coveralls": "jest --coverage && cat ./tests/coverage/lcov.info | coveralls"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
