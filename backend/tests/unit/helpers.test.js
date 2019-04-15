@@ -5,7 +5,7 @@ const rimraf = require('rimraf');
 const { 
     generateUID,
     fetchInputFiles,
-    saveInputFilesToDirs
+    searchAndReplaceFiles
 } = require('../../src/controllers/helpers.js');
 
 // let connection;
@@ -53,7 +53,7 @@ describe('file related tests', () => {
         }
     
         testFiles.map(testFile => {
-            return fs.writeFile(testFile, '');
+            return fs.writeFile(testFile, 'some text');
         });
 
         return Promise.all(testFiles);
@@ -63,14 +63,21 @@ describe('file related tests', () => {
         rimraf.sync(testDir);
     });
 
-    test('fetchInputFiles:: fetches all file names in given path', async () => {        
+    test('fetchInputFiles:: fetches all file names in given path', () => {        
         expect(fetchInputFiles(testDir))
             .resolves
             .toHaveLength(testFiles.length);
     });
     
-    // test('saveInputFilesToDirs:: saves the input files to the correct directories', () => {
-    //     saveInputFilesToDirs
-    // });
+    test('searchAndReplaceFiles:: saves the input files to the correct directories', done => {
+        return searchAndReplaceFiles(testFiles[0], ['some'], ['this']).then(data => {
+            fs.readFile(testFiles[0], 'utf8', (err, data) => {
+                if (err) return;
+                expect(data).toMatch('this');
+                done();
+            });
+            
+        })
+    });
 });
 
