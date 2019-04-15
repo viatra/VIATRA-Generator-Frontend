@@ -5,7 +5,8 @@ const rimraf = require('rimraf');
 const { 
     generateUID,
     fetchInputFiles,
-    searchAndReplaceFiles
+    searchAndReplaceFiles,
+    fetchNsURIFromMetaModel
 } = require('../../src/controllers/helpers.js');
 
 // let connection;
@@ -54,7 +55,7 @@ describe('file related tests', () => {
     
         testFiles.map(testFile => {
             if(testFile.includes('.ecore')) 
-                return fs.writeFile(testFile, 'nsURI="some.ns.uri.fetched"')
+                return fs.writeFile(testFile, 'nsURI="ns.uri.fetched"')
             return fs.writeFile(testFile, 'some text');
         });
 
@@ -72,8 +73,8 @@ describe('file related tests', () => {
     });
     
     test('searchAndReplaceFiles:: saves the input files to the correct directories', done => {
-        return searchAndReplaceFiles(testFiles[0], ['some'], ['this']).then(() => {
-            fs.readFile(testFiles[0], 'utf8', (err, data) => {
+        return searchAndReplaceFiles(testFiles[1], ['some'], ['this']).then(() => {
+            fs.readFile(testFiles[1], 'utf8', (err, data) => {
                 if (err) return;
                 expect(data).toMatch('this');
                 done();
@@ -82,8 +83,8 @@ describe('file related tests', () => {
         })
     });
 
-    test('fetchNsURIFromMetaModel:: fetches the content of nsURI flag', done => {
-        const expectedNsURI = 'some.ns.uri.fetched';
+    test('fetchNsURIFromMetaModel:: fetches the content of nsURI flag', () => {
+        const expectedNsURI = 'ns.uri.fetched';
         return fetchNsURIFromMetaModel(testFiles[0]).then(trimmed => {
             expect(trimmed).toBe(expectedNsURI);
         })
