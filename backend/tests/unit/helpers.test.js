@@ -1,16 +1,18 @@
 const fs = require('fs');
-// const { MongoClient } = require('mongodb');
 const rimraf = require('rimraf');
+const readline = require('readline');
 
 const { 
     generateUID,
     fetchInputFiles,
     searchAndReplaceFiles,
-    fetchNsURIFromMetaModel
+    fetchNsURIFromMetaModel,
+    parseVSConfig
 } = require('../../src/controllers/helpers.js');
 
-// let connection;
 
+// const { MongoClient } = require('mongodb');
+// let connection;
 /**
  * Tests for the helpers.js file
  * This file contains functions meant
@@ -56,6 +58,13 @@ describe('file related tests', () => {
         testFiles.map(testFile => {
             if(testFile.includes('.ecore')) 
                 return fs.writeFile(testFile, 'nsURI="ns.uri.fetched"')
+            else if (testFile.includes('.vsconfig')) {
+                const vsconfigPath = __dirname + '/mock_vsconfig.txt';
+                fs.readFile(vsconfigPath, 'utf8', (err, data) => {
+                    if (err) return;
+                    return fs.writeFile(testFile, data)
+                }); 
+            }
             return fs.writeFile(testFile, 'some text');
         });
 
@@ -89,6 +98,23 @@ describe('file related tests', () => {
         });
     });
 
-    
+    test('parseVSConfig:: parses a VSConfig and returns values', () => {
+        const rd = readline.createInterface({
+            input: fs.createReadStream(testFiles[3]),
+            console: false
+        });
+
+        const expected = { 
+            epackage: '/viatra-storage/domains/metamodels/FamMetamodel.ecore',
+            vql: '/viatra-storage/domains/constraints/FamPatterns.vql',
+            scope: { node: '5' },
+            number: '5',
+            runs: '1' 
+        };
+
+        return parseVSConfig(rd).then(config => {
+            expect(config).toMatchObject(expected);
+        });
+    });
 });
 

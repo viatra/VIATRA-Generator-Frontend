@@ -287,7 +287,7 @@ const copyVSConfigWithNewValues = (vsconfig, updatedValues) => {
                 if (err) reject(err);
                 resolve(copy);
             });
-        }).catch(reject) 
+        }).catch(reject);
     });
 }
 
