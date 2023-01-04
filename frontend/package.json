@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/viatra/VIATRA-Generator-Frontend#readme",
   "devDependencies": {
-    "react-scripts": "^1.1.5"
+    "react-scripts": "^5.0.1"
   },
   "dependencies": {
     "@material-ui/core": "^3.9.2",
